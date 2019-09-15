@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "module": "esnext",
+        "target": "es6",
+        "jsx": "react",
+        "sourceMap": true,
+        "allowJs": true,
+        "moduleResolution": "Node",
+        "incremental": true
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "../node_modules"
+    ]
+}
