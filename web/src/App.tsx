@@ -17,20 +17,30 @@ const theme = createMuiTheme({
         primary: { main: primary },
         secondary: { main: secondary },
     },
+    overrides: {
+        MuiTableCell: {
+            root: {
+                padding: '0.5rem 0.5rem 0.5rem 0.5rem',
+                tableLayout: 'fixed',
+                width: '100%',
+            }
+        }
+    }
 });
 
 const App: React.SFC<{}> = () => {
     return (
         <div>
             <ThemeProvider theme={theme}>
-                <AppBar position="static">
+                {/* <AppBar position="static">
                     <Toolbar>
                         <Typography variant="h6">
                             Activity Log
                         </Typography>
                     </Toolbar>
-                </AppBar>
+                </AppBar> */}
                 <ActivityList />
+
             </ThemeProvider>
         </div>
     )
