@@ -12,7 +12,8 @@ export class Activity extends Model {
 export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
     Activity.init({
         id: {
-            type: dataTypes.UUIDV4,
+            type: dataTypes.UUID,
+            defaultValue: dataTypes.UUIDV4,
             primaryKey: true,
             allowNull: false,
             unique: true,

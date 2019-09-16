@@ -1,7 +1,4 @@
-import * as dotenv from 'dotenv';
 import { Sequelize, Dialect } from 'sequelize';
-
-dotenv.config();
 
 const {
     DB_NAME: database,
@@ -11,6 +8,11 @@ const {
     DB_PORT: port,
     DB_DIALECT: dialect,
 } = process.env;
+
+export const options = {
+    database,
+    username,
+};
 
 export default new Sequelize(
     database,
@@ -27,7 +29,6 @@ export default new Sequelize(
         pool: {max: 5, min: 0, idle: 10000},
         define: {
             freezeTableName: true,
-            underscored: true,
         },
         logging: (str: string) => console.log(str)
     }

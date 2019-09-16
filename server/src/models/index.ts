@@ -12,7 +12,7 @@ import { Model, ModelMap } from './types';
 
 const importModels = (seq: Sequelize): ModelMap => {
     const modelMap = fs.readdirSync(__dirname).filter((file) => {
-        return (file.indexOf('.') !== 0) && (file !== 'index.js') && (file.slice(-3) === '.js');
+        return (file.indexOf('.') !== 0) && (file !== 'index.js') && (file !== 'types.js') && (file.slice(-3) === '.js');
     }).reduce((out, file) => {
         const model = seq.import(path.join(__dirname, file)) as typeof Model;
         out[model.name] = model;
