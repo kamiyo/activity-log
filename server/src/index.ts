@@ -3,7 +3,7 @@ import * as path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-import * as express from 'express';
+import express from 'express';
 import { ApiRouter } from './api';
 
 const app = express();

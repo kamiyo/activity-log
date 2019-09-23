@@ -30,6 +30,6 @@ export default new Sequelize(
         define: {
             freezeTableName: true,
         },
-        logging: (str: string) => console.log(str)
+        logging: (str: string) => console.log(str),
     }
 );

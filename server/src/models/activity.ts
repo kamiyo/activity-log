@@ -1,6 +1,7 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
+import { string } from 'prop-types';
 
-type ActivityType = 'meal' | 'poop';
+type ActivityType = 'meal' | 'poop' | 'nurse' | 'bath' | 'sleep';
 
 export class Activity extends Model {
     readonly id: string;
@@ -12,8 +13,7 @@ export class Activity extends Model {
 export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
     Activity.init({
         id: {
-            type: dataTypes.UUID,
-            defaultValue: dataTypes.UUIDV4,
+            type: dataTypes.STRING,
             primaryKey: true,
             allowNull: false,
             unique: true,

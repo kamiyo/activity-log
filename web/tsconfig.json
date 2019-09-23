@@ -7,7 +7,13 @@
         "sourceMap": true,
         "allowJs": true,
         "moduleResolution": "Node",
-        "incremental": true
+        "incremental": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "typeRoots": [
+            "../node_modules/@types",
+            "../@types"
+        ]
     },
     "include": [
         "src/**/*"

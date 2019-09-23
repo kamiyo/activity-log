@@ -6,7 +6,9 @@
         "moduleResolution": "Node",
         "sourceMap": true,
         "outDir": "./build",
-        "incremental": true
+        "incremental": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
     },
     "include": [
         "src/**/*"
