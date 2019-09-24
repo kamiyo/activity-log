@@ -8,6 +8,7 @@ export class Activity extends Model {
     readonly dateTime: Date;
     readonly type: ActivityType;
     readonly amount?: number;
+    readonly notes: string;
 }
 
 export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
@@ -21,6 +22,7 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         dateTime: dataTypes.DATE,
         type: dataTypes.STRING,
         amount: dataTypes.DECIMAL(10, 2),
+        notes: dataTypes.TEXT(),
     }, {
         sequelize,
         tableName: 'activity',

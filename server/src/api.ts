@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { Sequelize, FindOptions, Op, WhereAttributeHash, WhereValue } from 'sequelize';
 import * as uniqid from 'uniqid';
-import omit from 'lodash/omit';
+import jwt from 'jsonwebtoken';
 
 import db from './models';
 import { DateTime } from 'luxon';
@@ -13,12 +13,38 @@ const handleError = (res: Response, err: string) => {
     res.status(500).json({ error: err });
 }
 
-apiRouter.use((req, res, next) => {
-    if (!req.headers.authorization) {
+const jwtSecret = process.env.JWT_SECRET;
+
+apiRouter.use(async (req, res, next) => {
+    if (!req.headers.authorization && !req.cookies.length) {
         return res.status(403).json({
             error: 'No credentials sent.',
         });
-    } else {
+    }
+    if (!!req.cookies.length) {
+        const token = req.cookies['_al_jwt'];
+        try {
+            const payload = jwt.verify(token, jwtSecret, {
+                issuer: 'jasboys.seanchenpiano.com',
+            });
+            const username = (payload as { username: string }).username
+            const [user] = await models.User.findAll({
+                where: {
+                    username,
+                },
+            });
+            if (!user) {
+                throw 'user not found';
+            }
+            return next();
+        } catch (err) {
+            console.log(err);
+            return res.status(403).json({
+                error: 'Invalid credentials.',
+            });
+        }
+    }
+    if (req.headers.authorization) {
         const auth = req.headers.authorization;
         const strings = auth.split(' ');
         if (strings[1] !== process.env.DEV_API_KEY) {
@@ -26,7 +52,7 @@ apiRouter.use((req, res, next) => {
                 error: 'Invalid credentials.',
             });
         } else {
-            next();
+            return next();
         }
     }
 });
@@ -52,9 +78,9 @@ apiRouter.get('/activities', async (req, res) => {
         dateTime[Op.gt] = DateTime.fromSeconds(parseInt(after)).toJSDate();
     } else if (!after) {
         if (before) {
-            dateTime[Op.gt] = DateTime.fromSeconds(parseInt(before)).minus({ week: 1 }).toJSDate();
+            dateTime[Op.gt] = DateTime.fromSeconds(parseInt(before)).minus({ days: 3 }).toJSDate();
         } else {
-            dateTime[Op.gt] = DateTime.local().minus({ week: 1 }).toJSDate();
+            dateTime[Op.gt] = DateTime.local().minus({ days: 3 }).toJSDate();
         }
     }
 
@@ -69,7 +95,15 @@ apiRouter.get('/activities', async (req, res) => {
     try {
         let activities = await models.Activity.findAll(findOptions);
         if (activities.length === 0) {
-            activities = await models.Activity.findAll();
+            activities = await models.Activity.findAll({
+                attributes: {
+                    exclude: ['createdAt', 'updatedAt'],
+                },
+                order: [
+                    ['dateTime', 'DESC'],
+                ],
+                limit: 20,
+            });
         }
         res.json({ activities });
     } catch (err) {
@@ -81,7 +115,8 @@ apiRouter.post('/activities', async (req, res) => {
     const {
         dateTime,
         type,
-        amount
+        amount,
+        notes,
     } = req.body;
 
     const {
@@ -100,6 +135,7 @@ apiRouter.post('/activities', async (req, res) => {
             id,
             dateTime,
             type,
+            notes,
             amount: amount ? parseFloat(amount) : null,
         });
 
@@ -116,7 +152,7 @@ apiRouter.post('/activities', async (req, res) => {
             activities: (!!after && DateTime.fromJSDate(created.dateTime) > DateTime.fromSeconds(parseInt(after)))
                 ? [created]
                 : [],
-                created,
+            created,
         });
     } catch (err) {
         handleError(res, err);
@@ -128,7 +164,8 @@ apiRouter.put('/activities/:id', async (req, res) => {
     const {
         dateTime,
         type,
-        amount
+        amount,
+        notes,
     } = req.body;
 
     const {
@@ -139,6 +176,7 @@ apiRouter.put('/activities/:id', async (req, res) => {
         await models.Activity.update({
             dateTime,
             type,
+            notes,
             amount: amount ? parseFloat(amount) : null,
         }, {
             where: { id },

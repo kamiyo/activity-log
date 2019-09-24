@@ -7,3 +7,5 @@ On click row, change button to edit
 Use dialog for edit
 
 Serverside stuff
+
+Need node-gyp on server (global install) for hashing and GCC.
