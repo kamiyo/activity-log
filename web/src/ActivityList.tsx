@@ -5,7 +5,7 @@ import ListSubheader, { ListSubheaderProps } from '@material-ui/core/ListSubhead
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItem from '@material-ui/core/ListItem';
 import Grid from '@material-ui/core/Grid';
-import Typography from '@material-ui/core/Typography';
+import Typography, { TypographyProps } from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from '@material-ui/icons/Close';
@@ -17,8 +17,8 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
 import Snackbar from '@material-ui/core/Snackbar';
 import SnackbarContent from '@material-ui/core/SnackbarContent';
-import { DateTime } from 'luxon';
-import { makeStyles, createStyles, withStyles } from '@material-ui/styles';
+import { DateTime, Duration } from 'luxon';
+import { makeStyles, createStyles, withStyles, WithStyles } from '@material-ui/styles';
 import axios from 'axios';
 import { useTheme, Theme } from '@material-ui/core';
 import green from '@material-ui/core/colors/green';
@@ -31,28 +31,15 @@ import {
     State,
     Action,
     DataGroup,
+    ActivityKeys,
 } from './types';
 import { FlexBasisProperty, TextAlignProperty, GlobalsNumber } from 'csstype';
 import ActivityDialog from './ActivityDialog';
 import { fetchDataAction } from './actions';
 import Color from 'color';
+import { activityTypeMap } from './GroupedArray';
 
 const DEV_API_KEY = 'rusr0nlautNPE0+jVCkXQFByOVgvGHKVZ+zyw05/58I=';
-
-interface ActivityInfo {
-    emoji: string;
-    units?: string;
-}
-
-export type ActivityKeys = 'meal' | 'poop' | 'nurse' | 'bath' | 'sleep';
-
-export const activityTypeMap: Record<ActivityKeys, ActivityInfo> = {
-    meal: { emoji: '🍼', units: 'oz' },
-    poop: { emoji: '💩' },
-    nurse: { emoji: '🌰' },
-    bath: { emoji: '🛁' },
-    sleep: { emoji: '💤', units: 'hrs' },
-};
 
 axios.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${DEV_API_KEY}`;
@@ -93,6 +80,7 @@ interface Column {
     flexBasis?: FlexBasisProperty<number>;
     flexGrow?: GlobalsNumber;
     textAlign?: TextAlignProperty;
+    className?: string;
 }
 
 const getTimeAgo = (dateTime: DateTime) => {
@@ -101,6 +89,12 @@ const getTimeAgo = (dateTime: DateTime) => {
     const hours = diff.hours;
     const minutes = Math.round(diff.minutes);
     return `${hours} hr${hours > 1 ? 's' : ''} ${minutes} min${minutes > 1 ? 's' : ''} ago`;
+};
+
+const formatDuration = (dur: Duration) => {
+    const hours = dur.hours;
+    const minutes = Math.round(dur.minutes);
+    return `-${hours} hr${hours > 1 ? 's' : ''} ${minutes} min${minutes > 1 ? 's' : ''}`;
 };
 
 const getTimeSince = (a: DateTime, b: DateTime) => {
@@ -120,6 +114,7 @@ const columns: Column[] = [
         flexBasis: 'auto',
         flexGrow: 1,
         textAlign: 'left',
+        className: 'dateTimeColumn',
     },
     {
         id: 'type',
@@ -128,22 +123,24 @@ const columns: Column[] = [
         },
         minWidth: '2rem',
         align: 'center',
-        flexBasis: '4rem',
+        flexBasis: '2rem',
         gridWidth: 'auto',
         flexGrow: 0,
         textAlign: 'center',
+        className: 'emojiColumn',
     },
     {
         id: 'amount',
         format: (amount: string, type: ActivityKeys) => {
             const units = activityTypeMap[type] ? activityTypeMap[type].units : '';
-            return (amount && units) ? `${amount} ${units}`: '';
+            return (amount && units) ? `${amount} ${units}` : '';
         },
         minWidth: '3rem',
         flexBasis: '4.2rem',
         gridWidth: 'auto',
         flexGrow: 0,
         textAlign: 'left',
+        className: 'amountColumn',
     },
 ];
 
@@ -181,14 +178,24 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     listText: {
         margin: 0,
     },
+    dateTimeColumn: {
+        display: 'flex',
+        alignItems: 'flex-start',
+    },
+    emojiColumn: {
+        display: 'flex',
+        justifyContent: 'center',
+    },
+    amountColumn: {},
     secondaryText: {
-        display: 'inline-block',
+        display: 'block',
         marginLeft: '0.5rem',
+        marginTop: '0.2rem',
     },
     aside: {
         fontSize: '0.8rem',
         color: '#8c8c8c',
-        display: 'inline-block',
+        display: 'block',
         marginLeft: '0.5rem',
     },
     fab: {
@@ -197,7 +204,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         bottom: theme.spacing(3),
         right: theme.spacing(3),
     },
-    grid: (basis: number | string) => ({
+    grid: (basis: string | number) => ({
         flexBasis: basis,
     }),
     snackbar: {
@@ -340,7 +347,9 @@ const ActivityList: React.FC<{}> = () => {
                                                         >
                                                             {columns.map(column => {
                                                                 const value = activity[column.id];
-                                                                const { flexBasis, flexGrow, textAlign, align, gridWidth } = column;
+                                                                const { flexBasis, flexGrow, textAlign, align, gridWidth, className } = column;
+                                                                const primaryProps: Partial<TypographyProps> = { align };
+                                                                const columnClass = classes[column.className as keyof typeof classes] || '';
                                                                 return (
                                                                     <Grid
                                                                         key={column.id}
@@ -353,18 +362,28 @@ const ActivityList: React.FC<{}> = () => {
                                                                         }}
                                                                     >
                                                                         <ListItemText
-                                                                            className={classes.listText}
-                                                                            primaryTypographyProps={{ align }}
-                                                                            primary={column.format(value, activity.type)}
-                                                                            secondaryTypographyProps={{ className: classes.secondaryText }}
+                                                                            className={`${classes.listText} ${columnClass}`}
+                                                                            disableTypography
+                                                                            primary={
+                                                                                <Typography {...primaryProps}>{column.format(value, activity.type)}</Typography>
+                                                                            }
                                                                             secondary={
                                                                                 (value instanceof DateTime)
-                                                                                    ? (idx === 0)
-                                                                                        ? (idy === 0)
-                                                                                            ? getTimeAgo(value)
-                                                                                            : false
-                                                                                        : getTimeSince(value, arr[idx - 1].dateTime)
-                                                                                    : false
+                                                                                    ? <div className={classes.secondaryText}>
+                                                                                        <Typography className={classes.aside}>
+                                                                                            {
+                                                                                                (activity.timeBeforePrev === null)
+                                                                                                    ? getTimeAgo(value)
+                                                                                                    : formatDuration(activity.timeBeforePrev)
+                                                                                            }
+                                                                                        </Typography>
+                                                                                        {(activity.notes) &&
+                                                                                            <Typography className={classes.aside}>
+                                                                                                {activity.notes}
+                                                                                            </Typography>
+                                                                                        }
+                                                                                    </div>
+                                                                                    : null
                                                                             }
                                                                         />
                                                                     </Grid>
@@ -394,7 +413,15 @@ const ActivityList: React.FC<{}> = () => {
             </Paper>
             <ActivityDialog
                 open={dialogOpen}
-                activity={selected}
+                activity={isEdit ? selected :
+                    {
+                        id: '',
+                        dateTime: selected ? selected.dateTime : DateTime.local(),
+                        type: 'meal',
+                        amount: '',
+                        notes: ''
+                    }
+                }
                 edit={isEdit}
                 handleClose={() => handleOpenDialog(false)}
             />
@@ -408,7 +435,7 @@ const ActivityList: React.FC<{}> = () => {
                     className={classes.snackbarContent}
                     message={
                         <span className={classes.snackbarMessage}>
-                            <SnackIcon className={classes[(state.error) ? 'snackError' : 'snackSuccess']}/>
+                            <SnackIcon className={classes[(state.error) ? 'snackError' : 'snackSuccess']} />
                             {state.response.message}
                         </span>
                     }

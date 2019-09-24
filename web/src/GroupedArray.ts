@@ -1,6 +1,14 @@
 import binarySearch from 'binary-search';
-import { Data, HasDateTime, RawData, DataGroup } from './types';
-import { DateTime } from 'luxon';
+import { Data, HasDateTime, RawData, DataGroup, ActivityKeys, ActivityInfo } from './types';
+import { DateTime, Duration } from 'luxon';
+
+export const activityTypeMap: Record<ActivityKeys, ActivityInfo> = {
+    meal: { emoji: '🍼', units: 'oz' },
+    poop: { emoji: '💩' },
+    nurse: { emoji: '🌰' },
+    bath: { emoji: '🛁' },
+    sleep: { emoji: '💤', units: 'hrs' },
+};
 
 export type comparator<T> = (a: T, b: T, index?: number, array?: T[]) => number;
 
@@ -47,7 +55,20 @@ class GroupedArray {
     readonly comparator: comparator<HasDateTime>;
     length: number;
 
+    private generateTimeBeforePrev() {
+        Object.keys(activityTypeMap).forEach((key) => {
+            let prev: DateTime = null;
+            this.array.forEach((val, idx, arr) => {
+                if (val.type !== key) return;
+                const dur: Duration = prev ? prev.diff(val.dateTime, ['hours', 'minutes']) : null;
+                arr[idx].timeBeforePrev = dur;
+                prev = val.dateTime;
+            });
+        });
+    }
+
     private generateNodes() {
+        this.generateTimeBeforePrev();
         this.nodes = [];
         if (this.length === 0) {
             return;

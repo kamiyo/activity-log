@@ -1,8 +1,6 @@
 import * as React from 'react';
-import axios, { AxiosRequestConfig, AxiosError } from 'axios';
-import { State, ActivityActionTypes, RawData, Data, Action, HasDateTime } from './types';
-import { DateTime } from 'luxon';
-import GroupedArray from './GroupedArray';
+import axios, { AxiosRequestConfig } from 'axios';
+import { State, ActivityActionTypes, RawData, Data, Action } from './types';
 
 export const fetchDataAction = (state: State, dispatch: React.Dispatch<Action>) => async () => {
     if (!state.hasMore) {

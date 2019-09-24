@@ -8,20 +8,22 @@ import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Divider from '@material-ui/core/Divider';
 import InputAdornment from '@material-ui/core/InputAdornment';
-import { Data } from './types';
-import { activityTypeMap, ActivityListContext, ActivityKeys } from './ActivityList';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import { Data, ActivityKeys } from './types';
+import { ActivityListContext } from './ActivityList';
 import LuxonUtils from '@date-io/luxon';
 import { MuiPickersUtilsProvider, DateTimePicker } from '@material-ui/pickers';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
-import { makeStyles, createStyles, withStyles } from '@material-ui/styles';
-import { useTheme, Theme, CircularProgress } from '@material-ui/core';
+import { makeStyles, createStyles, withStyles, useTheme } from '@material-ui/styles';
+import { Theme } from '@material-ui/core';
 import { DateTime } from 'luxon';
 import green from '@material-ui/core/colors/green';
 import red from '@material-ui/core/colors/red';
 import DeleteOutline from '@material-ui/icons/DeleteOutline';
 import Color from 'color';
 import { addNewAction, updateAction, deleteAction } from './actions';
+import { activityTypeMap } from './GroupedArray';
 
 const SubmitButton = withStyles(() => ({
     root: {
@@ -89,7 +91,7 @@ interface ActivityDialogProps {
     handleClose: () => void;
 }
 
-const initialState: Data = { id: '', dateTime: DateTime.local(), type: '', amount: '' }
+const initialState: Data = { id: '', dateTime: DateTime.local(), type: 'meal', amount: '', notes: '' }
 
 const ActivityDialog: React.FC<ActivityDialogProps> = (props) => {
     const theme = useTheme();
@@ -99,8 +101,10 @@ const ActivityDialog: React.FC<ActivityDialogProps> = (props) => {
     const [error, setError] = React.useState(false);
 
     React.useEffect(() => {
-        changeActivity(props.activity || initialState);
-    }, [props.activity]);
+        props.edit
+        ? changeActivity(props.activity || initialState)
+        : changeActivity({ ...initialState, dateTime: activity.dateTime });
+    }, [props.activity, props.edit]);
 
     const units = (!activity.type) ? '' : activityTypeMap[activity.type].units;
     const adornment = (units) ? units : '';
@@ -193,7 +197,20 @@ const ActivityDialog: React.FC<ActivityDialogProps> = (props) => {
                             </InputAdornment>,
                     }}
                 />
-
+                <TextField
+                    margin="normal"
+                    id="notes"
+                    label="Notes"
+                    multiline
+                    rowsMax="3"
+                    value={activity.notes}
+                    onChange={(event) => {
+                        changeActivity({
+                            ...activity,
+                            notes: event.target.value
+                        });
+                    }}
+                />
             </DialogContent>
             <DialogActions className={classes.dialogActions}>
                 <DeleteButton

@@ -1,7 +1,7 @@
 import GroupedArray, { dataComp, rawToData } from '../src/GroupedArray';
 import diff from 'jest-diff';
-import { Data } from '../src/types';
-import { DateTime } from 'luxon';
+import { Data, RawData } from '../src/types';
+import { DateTime, Duration } from 'luxon';
 
 declare global {
     namespace jest {
@@ -73,7 +73,7 @@ describe('Comparator Function', () => {
 });
 
 describe('GroupedArray', () => {
-    const testData = [
+    const testData: RawData[] = [
         {
             "id": "ga8k0ski9vz",
             "dateTime": "2019-09-20T20:19:18.727Z",
@@ -283,9 +283,22 @@ describe('GroupedArray', () => {
         const map = ga.toGrouped();
         expect(map.length).toBe(ga.nodes.length);
         expect(map[0].data.length).toBe(6);
-        expect(map[0].amount).toBeCloseTo(12.30);
+        expect(map[0].amount.meal).toBeCloseTo(12.30);
         expect(map[1].dateTime).toBeSameDateTime(mappedData[6].dateTime.startOf('day'));
         expect(map[1].data.length).toBe(1);
         expect(map[2].data.length).toBe(0);
-    })
+    });
+    it('timeBeforePrev', () => {
+        const ga = new GroupedArray(shuffled(mappedData), dataComp);
+        expect(
+            (ga.array[ga.length - 1].timeBeforePrev as Duration).hours
+        ).toBe(
+            mappedData[mappedData.length - 2].dateTime.diff(mappedData[mappedData.length - 1].dateTime, ['hours', 'minutes']).hours
+        );
+        expect(
+            (ga.array[ga.length - 1].timeBeforePrev as Duration).minutes
+        ).toBe(
+            mappedData[mappedData.length - 2].dateTime.diff(mappedData[mappedData.length - 1].dateTime, ['hours', 'minutes']).minutes
+        );
+    });
 });

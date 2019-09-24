@@ -1,6 +1,5 @@
-import { DateTime } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 import GroupedArray from './GroupedArray';
-import { ActivityKeys } from './ActivityList';
 
 export interface Response {
     status?: number,
@@ -33,6 +32,7 @@ export interface BaseData extends HasDateTime {
     type?: ActivityKeys | '';
     amount?: string;
     dateTime: string | DateTime;
+    notes?: string;
 }
 
 export interface RawData extends BaseData {
@@ -41,6 +41,7 @@ export interface RawData extends BaseData {
 
 export interface Data extends BaseData {
     dateTime: DateTime;
+    timeBeforePrev?: Duration;
 }
 
 export interface DataGroup extends HasDateTime {
@@ -60,3 +61,11 @@ export type Action =
         hasMore?: boolean,
         response: Response, }
     | { type: ActivityActionTypes.FETCH_DATA_REQUEST };
+
+
+export interface ActivityInfo {
+    emoji: string;
+    units?: string;
+}
+
+export type ActivityKeys = 'meal' | 'poop' | 'nurse' | 'bath' | 'sleep';
