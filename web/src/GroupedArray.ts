@@ -55,6 +55,31 @@ class GroupedArray {
     readonly comparator: comparator<HasDateTime>;
     length: number;
 
+    getStats() {
+        let stats: Partial<Record<ActivityKeys, { mean: Duration, stdev: Duration }>> = {};
+        Object.keys(activityTypeMap).forEach((key: ActivityKeys) => {
+            let count: number = 0;
+            let sum = this.array.reduce((prev, val) => {
+                if (val.type !== key) return prev;
+                if (!val.timeBeforePrev) return prev;
+                count++;
+                return prev + val.timeBeforePrev.as('milliseconds');
+            }, 0);
+            const mean = (count > 1) ? sum / count : 0;
+            let stdev = this.array.reduce((prev, val) => {
+                if (val.type !== key) return prev;
+                if (!val.timeBeforePrev) return prev;
+                return prev + Math.pow(val.timeBeforePrev.as('milliseconds') - mean, 2);
+            }, 0);
+            stdev = (count > 1) ? Math.sqrt(stdev / (count - 1)) : 0;
+            stats[key as ActivityKeys] = {
+                mean: Duration.fromMillis(mean).shiftTo('hours', 'minutes'),
+                stdev: Duration.fromMillis(stdev).shiftTo('hours', 'minutes'),
+            };
+        });
+        return stats;
+    }
+
     private generateTimeBeforePrev() {
         Object.keys(activityTypeMap).forEach((key) => {
             let prev: DateTime = null;

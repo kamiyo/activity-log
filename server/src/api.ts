@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 
 import db from './models';
 import { DateTime } from 'luxon';
+import { verifyLogin } from './login';
 const models = db.models;
 
 const apiRouter = Router();
@@ -13,49 +14,7 @@ const handleError = (res: Response, err: string) => {
     res.status(500).json({ error: err });
 }
 
-const jwtSecret = process.env.JWT_SECRET;
-
-apiRouter.use(async (req, res, next) => {
-    if (!req.headers.authorization && !req.cookies.length) {
-        return res.status(403).json({
-            error: 'No credentials sent.',
-        });
-    }
-    if (!!req.cookies.length) {
-        const token = req.cookies['_al_jwt'];
-        try {
-            const payload = jwt.verify(token, jwtSecret, {
-                issuer: 'jasboys.seanchenpiano.com',
-            });
-            const username = (payload as { username: string }).username
-            const [user] = await models.User.findAll({
-                where: {
-                    username,
-                },
-            });
-            if (!user) {
-                throw 'user not found';
-            }
-            return next();
-        } catch (err) {
-            console.log(err);
-            return res.status(403).json({
-                error: 'Invalid credentials.',
-            });
-        }
-    }
-    if (req.headers.authorization) {
-        const auth = req.headers.authorization;
-        const strings = auth.split(' ');
-        if (strings[1] !== process.env.DEV_API_KEY) {
-            return res.status(403).json({
-                error: 'Invalid credentials.',
-            });
-        } else {
-            return next();
-        }
-    }
-});
+apiRouter.use(verifyLogin);
 
 apiRouter.get('/activities', async (req, res) => {
     const {

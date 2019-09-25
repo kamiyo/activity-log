@@ -10,7 +10,6 @@ import Divider from '@material-ui/core/Divider';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Data, ActivityKeys } from './types';
-import { ActivityListContext } from './ActivityList';
 import LuxonUtils from '@date-io/luxon';
 import { MuiPickersUtilsProvider, DateTimePicker } from '@material-ui/pickers';
 import FormControl from '@material-ui/core/FormControl';
@@ -24,6 +23,7 @@ import DeleteOutline from '@material-ui/icons/DeleteOutline';
 import Color from 'color';
 import { addNewAction, updateAction, deleteAction } from './actions';
 import { activityTypeMap } from './GroupedArray';
+import { ActivityListContext } from './App';
 
 const SubmitButton = withStyles(() => ({
     root: {
@@ -189,6 +189,9 @@ const ActivityDialog: React.FC<ActivityDialogProps> = (props) => {
                     }}
                     value={activity.amount === null ? '' : activity.amount}
                     error={error}
+                    InputLabelProps={{
+                        shrink: true
+                    }}
                     InputProps={{
                         className: classes.amountWidth,
                         endAdornment:
@@ -209,6 +212,9 @@ const ActivityDialog: React.FC<ActivityDialogProps> = (props) => {
                             ...activity,
                             notes: event.target.value
                         });
+                    }}
+                    InputLabelProps={{
+                        shrink: true
                     }}
                 />
             </DialogContent>

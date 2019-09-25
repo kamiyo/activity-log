@@ -9,3 +9,4 @@ Use dialog for edit
 Serverside stuff
 
 Need node-gyp on server (global install) for hashing and GCC.
+once build, use node ./server/build/createUser.js [username] [password] to create user.
