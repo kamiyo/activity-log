@@ -1,16 +1,12 @@
 import * as React from 'react';
 import Paper from '@material-ui/core/Paper'
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
-import { makeStyles, createStyles, withStyles, useTheme } from '@material-ui/styles';
+import { makeStyles, createStyles, useTheme } from '@material-ui/styles';
 import { Theme, CircularProgress } from '@material-ui/core';
 import { ActivityListContext } from './App';
-import Color from 'color';
 import { loginAction } from './actions';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -20,6 +16,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         flexDirection: 'column',
         padding: '2rem',
         width: '100%',
+        maxWidth: '600px',
     },
     wrapper: {
         [`${theme.breakpoints.up(0)} and (orientation:landscape)`]: {
@@ -76,6 +73,12 @@ const LoginPage: React.FC<{}> = () => {
                     }}
                     error={state.response.status === 403}
                     type="password"
+                    onKeyPress={(ev) => {
+                        if (ev.key === 'Enter') {
+                            loginAction(username, password, state, dispatch)();
+                            ev.preventDefault();
+                        }
+                    }}
                 />
                 <Button
                     disabled={state.requestInFlight}

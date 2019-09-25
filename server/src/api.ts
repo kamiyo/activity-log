@@ -1,7 +1,6 @@
 import { Router, Response } from 'express';
-import { Sequelize, FindOptions, Op, WhereAttributeHash, WhereValue } from 'sequelize';
+import { FindOptions, Op } from 'sequelize';
 import * as uniqid from 'uniqid';
-import jwt from 'jsonwebtoken';
 
 import db from './models';
 import { DateTime } from 'luxon';
@@ -20,6 +19,8 @@ apiRouter.get('/activities', async (req, res) => {
     const {
         before,
         after,
+        type,
+        limit,
     } = req.query;
 
     const findOptions: FindOptions = {
@@ -33,23 +34,34 @@ apiRouter.get('/activities', async (req, res) => {
 
     const dateTime: any = {};
 
-    if (after && after !== 'all') {
-        dateTime[Op.gt] = DateTime.fromSeconds(parseInt(after)).toJSDate();
-    } else if (!after) {
-        if (before) {
-            dateTime[Op.gt] = DateTime.fromSeconds(parseInt(before)).minus({ days: 3 }).toJSDate();
-        } else {
-            dateTime[Op.gt] = DateTime.local().minus({ days: 3 }).toJSDate();
+    if (type || limit) {
+        if (type) {
+            findOptions.where = {
+                type,
+            };
         }
-    }
+        if (limit) {
+            findOptions.limit = limit;
+        }
+    } else {
+        if (after && after !== 'all') {
+            dateTime[Op.gt] = DateTime.fromSeconds(parseInt(after)).toJSDate();
+        } else if (!after) {
+            if (before) {
+                dateTime[Op.gt] = DateTime.fromSeconds(parseInt(before)).minus({ days: 3 }).toJSDate();
+            } else {
+                dateTime[Op.gt] = DateTime.local().minus({ days: 3 }).toJSDate();
+            }
+        }
 
-    if (before) {
-        dateTime[Op.lt] = DateTime.fromSeconds(parseInt(before)).toJSDate();
-    }
+        if (before) {
+            dateTime[Op.lt] = DateTime.fromSeconds(parseInt(before)).toJSDate();
+        }
 
-    findOptions.where = {
-        dateTime,
-    };
+        findOptions.where = {
+            dateTime,
+        };
+    }
 
     try {
         let activities = await models.Activity.findAll(findOptions);

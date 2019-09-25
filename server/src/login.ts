@@ -99,7 +99,7 @@ loginRouter.post('/logout', async (_, res) => {
         path: '/api',
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-    });
+    }).json({});
 });
 
 export const LoginRouter = loginRouter;

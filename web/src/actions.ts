@@ -23,7 +23,10 @@ export const fetchDataAction = (state: State, dispatch: React.Dispatch<Action>) 
             type: ActivityActionTypes.FETCH_DATA_SUCCESS,
             last,
             hasMore,
-            response: {},
+            response: {
+                message: state.response.message,
+                status: 0,
+            },
         });
     } catch (err) {
         if (err.response) {
@@ -184,7 +187,7 @@ export const loginAction = (username: string, password: string, state: State, di
             type: ActivityActionTypes.LOGIN_FAILURE,
             response: {
                 status: err.response.status,
-                message: err.response.statusText,
+                message: 'Invalid credentials.',
             }
         });
         console.log(err);
@@ -200,7 +203,7 @@ export const logoutAction = (state: State, dispatch: React.Dispatch<Action>) => 
             type: ActivityActionTypes.LOGOUT_SUCCESS,
             response: {
                 status: response.status,
-                message: response.statusText,
+                message: 'Successfully logged out.',
             },
         });
     } catch (err) {

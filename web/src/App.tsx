@@ -3,7 +3,7 @@ import AppBar from '@material-ui/core/AppBar';
 import Typography from '@material-ui/core/Typography';
 import Toolbar from '@material-ui/core/Toolbar';
 import { Theme } from '@material-ui/core/styles';
-import { ThemeProvider, useTheme } from '@material-ui/styles';
+import { useTheme } from '@material-ui/styles';
 import green from '@material-ui/core/colors/green';
 import AddIcon from '@material-ui/icons/Add';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -80,10 +80,17 @@ const App: React.SFC<{}> = () => {
     }, [state.requestInFlight]);
 
     React.useEffect(() => {
-        if (Object.entries(state.response).length !== 0 && state.response.constructor === Object) {
+        if (Object.entries(state.response).length !== 0
+            && state.response.constructor === Object
+            && state.response.status !== 0) {
             handleSnackbarOpen(true);
         }
     }, [state.response]);
+
+    React.useEffect(() => {
+        if (state.loggedIn === false)
+            handleMenuOpen(false);
+    }, [state.loggedIn])
 
     const getInitialDialogState = (): Data => ({
         id: '',

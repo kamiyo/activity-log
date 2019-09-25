@@ -54,6 +54,11 @@ const theme = createMuiTheme({
             root: {
                 borderRadius: '4px',
             }
+        },
+        MuiListItem: {
+            button: {
+                transition: 'background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+            }
         }
     },
 });

@@ -6,17 +6,12 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItem from '@material-ui/core/ListItem';
 import Grid from '@material-ui/core/Grid';
 import Typography, { TypographyProps } from '@material-ui/core/Typography';
-import Fab from '@material-ui/core/Fab';
-import AddIcon from '@material-ui/icons/Add';
-import EditIcon from '@material-ui/icons/Edit';
 import Divider from '@material-ui/core/Divider';
 import throttle from 'lodash/throttle';
 import { DateTime, Duration } from 'luxon';
-import { makeStyles, createStyles, withStyles } from '@material-ui/styles';
-import axios from 'axios';
+import { makeStyles, createStyles } from '@material-ui/styles';
 import { useTheme, Theme } from '@material-ui/core';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import green from '@material-ui/core/colors/green';
 import {
     Data,
     DataGroup,
@@ -97,8 +92,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     root: {
         width: '100%',
         [theme.breakpoints.up('lg')]: {
-            margin: '2rem auto',
-            maxWidth: '800px',
+            margin: 'auto',
         },
         margin: 'auto',
     },
@@ -108,6 +102,8 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         },
         [theme.breakpoints.up('sm')]: {
             height: `calc(100vh - 64px)`,
+            display: 'flex',
+            justifyContent: 'center',
         },
         height: `calc(100vh - 56px)`,
         overflow: 'auto',
@@ -120,6 +116,12 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     mainList: {
         paddingTop: 0,
         paddingBottom: '5rem',
+        maxWidth: '800px',
+        width: '100%',
+        [theme.breakpoints.up('lg')]: {
+            paddingTop: '2rem',
+            flex: '1 1 auto',
+        },
     },
     list: {
         padding: 0,
@@ -238,74 +240,76 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
                                         </Grid>
                                     </MyListSubheader>
                                     {section.data.map((activity: Data, idx, arr) => {
-                                        return (
-                                            <React.Fragment key={idx}>
-                                                {(idx !== 0) && (
-                                                    <Divider />
-                                                )}
-                                                <ListItem
-                                                    key={`${activity.dateTime.toISO()}-${activity.type}`}
-                                                    button
-                                                    onClick={() => {
-                                                        handleSelect(activity);
-                                                        handleIsEdit(true);
-                                                        handleOpenDialog(true);
-                                                    }}
-                                                >
-                                                    <Grid
-                                                        container
-                                                        justify={'space-between'}
-                                                        alignItems={'flex-start'}
-                                                        spacing={0}
+                                        return (!state.filters.length ||
+                                            (activity.type !== '' && state.filters.indexOf(activity.type) !== -1))
+                                            && (
+                                                <React.Fragment key={idx}>
+                                                    {(idx !== 0) && (
+                                                        <Divider />
+                                                    )}
+                                                    <ListItem
+                                                        key={`${activity.dateTime.toISO()}-${activity.type}`}
+                                                        button
+                                                        onClick={() => {
+                                                            handleSelect(activity);
+                                                            handleIsEdit(true);
+                                                            handleOpenDialog(true);
+                                                        }}
                                                     >
-                                                        {columns.map(column => {
-                                                            const value = activity[column.id];
-                                                            const { flexBasis, flexGrow, textAlign, align, gridWidth, className } = column;
-                                                            const primaryProps: Partial<TypographyProps> = { align };
-                                                            const columnClass = classes[column.className as keyof typeof classes] || '';
-                                                            return (
-                                                                <Grid
-                                                                    key={column.id}
-                                                                    item
-                                                                    xs={gridWidth}
-                                                                    style={{
-                                                                        flexBasis,
-                                                                        flexGrow,
-                                                                        textAlign
-                                                                    }}
-                                                                >
-                                                                    <ListItemText
-                                                                        className={`${classes.listText} ${columnClass}`}
-                                                                        disableTypography
-                                                                        primary={
-                                                                            <Typography {...primaryProps}>
-                                                                                {column.format(value, activity.type)}
-                                                                            </Typography>
-                                                                        }
-                                                                        secondary={
-                                                                            (value instanceof DateTime) &&
-                                                                            <div className={classes.secondaryText}>
-                                                                                <Typography className={classes.aside}>
-                                                                                    {(activity.timeBeforePrev === null)
-                                                                                        ? getTimeAgo(value)
-                                                                                        : formatDuration(activity.timeBeforePrev)
-                                                                                    }
+                                                        <Grid
+                                                            container
+                                                            justify={'space-between'}
+                                                            alignItems={'flex-start'}
+                                                            spacing={0}
+                                                        >
+                                                            {columns.map(column => {
+                                                                const value = activity[column.id];
+                                                                const { flexBasis, flexGrow, textAlign, align, gridWidth, className } = column;
+                                                                const primaryProps: Partial<TypographyProps> = { align };
+                                                                const columnClass = classes[column.className as keyof typeof classes] || '';
+                                                                return (
+                                                                    <Grid
+                                                                        key={column.id}
+                                                                        item
+                                                                        xs={gridWidth}
+                                                                        style={{
+                                                                            flexBasis,
+                                                                            flexGrow,
+                                                                            textAlign
+                                                                        }}
+                                                                    >
+                                                                        <ListItemText
+                                                                            className={`${classes.listText} ${columnClass}`}
+                                                                            disableTypography
+                                                                            primary={
+                                                                                <Typography {...primaryProps}>
+                                                                                    {column.format(value, activity.type)}
                                                                                 </Typography>
-                                                                                {(activity.notes) &&
+                                                                            }
+                                                                            secondary={
+                                                                                (value instanceof DateTime) &&
+                                                                                <div className={classes.secondaryText}>
                                                                                     <Typography className={classes.aside}>
-                                                                                        {activity.notes}
+                                                                                        {(activity.timeBeforePrev === null)
+                                                                                            ? getTimeAgo(value)
+                                                                                            : formatDuration(activity.timeBeforePrev)
+                                                                                        }
                                                                                     </Typography>
-                                                                                }
-                                                                            </div>
-                                                                        }
-                                                                    />
-                                                                </Grid>
-                                                            );
-                                                        })}
-                                                    </Grid>
-                                                </ListItem>
-                                            </React.Fragment>
-                                        );
+                                                                                    {(activity.notes) &&
+                                                                                        <Typography className={classes.aside}>
+                                                                                            {activity.notes}
+                                                                                        </Typography>
+                                                                                    }
+                                                                                </div>
+                                                                            }
+                                                                        />
+                                                                    </Grid>
+                                                                );
+                                                            })}
+                                                        </Grid>
+                                                    </ListItem>
+                                                </React.Fragment>
+                                            );
                                     })}
                                 </ul>
                             </li>
@@ -314,7 +318,7 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
                 </List>
                 {(state.requestInFlight) &&
                     <div className={classes.loading}>
-                        <LinearProgress color="secondary"/>
+                        <LinearProgress color="secondary" />
                     </div>
                 }
             </div>

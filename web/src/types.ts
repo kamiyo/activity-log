@@ -15,6 +15,7 @@ export interface State {
     error: boolean;
     response: Response;
     loggedIn: boolean;
+    filters: ActivityKeys[];
 }
 
 export enum ActivityActionTypes {
@@ -27,6 +28,7 @@ export enum ActivityActionTypes {
     LOGOUT_REQUEST = 'LOGOUT_REQUEST',
     LOGOUT_SUCCESS = 'LOGOUT_SUCCESS',
     LOGOUT_FAILURE = 'LOGOUT_FAILURE',
+    FILTER = 'FILTER',
 }
 
 export interface HasDateTime {
@@ -77,7 +79,9 @@ export type Action =
     | { type: ActivityActionTypes.LOGOUT_FAILURE,
         response: Response, }
     | { type: ActivityActionTypes.LOGOUT_SUCCESS,
-        response: Response, };
+        response: Response, }
+    | { type: ActivityActionTypes.FILTER,
+        filters: ActivityKeys[], };
 
 
 export interface ActivityInfo {

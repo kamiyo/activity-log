@@ -1,5 +1,4 @@
-import { Data, State, ActivityActionTypes, Action, BaseData, HasDateTime } from "./types";
-import { DateTime } from "luxon";
+import { State, ActivityActionTypes, Action } from "./types";
 import GroupedArray, { dataComp } from "./GroupedArray";
 
 export const initialState: State = {
@@ -10,6 +9,8 @@ export const initialState: State = {
     error: false,
     hasMore: true,
     loggedIn: true,
+    filters: [],
+    last: null,
 };
 
 const activityReducer = (state: State, action: Action): State => {
@@ -65,14 +66,22 @@ const activityReducer = (state: State, action: Action): State => {
             };
         case ActivityActionTypes.LOGOUT_SUCCESS:
             return {
-                ...state,
-                requestInFlight: false,
-                error: false,
+                ...initialState,
                 response: action.response,
                 loggedIn: false,
                 _data: new GroupedArray([], dataComp),
                 activities: [],
+                filters: [],
+                last: null,
+                hasMore: true,
+                error: false,
             };
+        case ActivityActionTypes.FILTER:
+
+            return {
+                ...state,
+                filters: action.filters,
+            }
         default:
             throw new Error('Invalid action type.');
     }
