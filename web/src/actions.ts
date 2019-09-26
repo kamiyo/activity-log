@@ -1,6 +1,7 @@
 import * as React from 'react';
 import axios, { AxiosRequestConfig } from 'axios';
 import { State, ActivityActionTypes, RawData, Data, Action } from './types';
+import { getPath } from './utils';
 
 export const fetchDataAction = (state: State, dispatch: React.Dispatch<Action>) => async () => {
     if (!state.hasMore) {
@@ -14,7 +15,7 @@ export const fetchDataAction = (state: State, dispatch: React.Dispatch<Action>) 
                 before: state.last.toSeconds(),
             };
         }
-        const response = await axios.get<{ activities: RawData[] }>('/api/v1/activities', config);
+        const response = await axios.get<{ activities: RawData[] }>(getPath('/api/v1/activities'), config);
         console.log(response);
         const hasMore = !!response.data.activities.length;
         state._data.push(...response.data.activities);
@@ -71,7 +72,7 @@ export const addNewAction = (activity: Data, state: State, dispatch: React.Dispa
             };
         }
         const response = await axios.post<{ created: RawData, activities: RawData[] }>(
-            '/api/v1/activities',
+            getPath('/api/v1/activities'),
             body,
             config,
         );
@@ -113,7 +114,7 @@ export const updateAction = (activity: Data, state: State, dispatch: React.Dispa
             };
         }
         const response = await axios.put<{ created: RawData, activities: RawData[] }>(
-            `/api/v1/activities/${activity.id}`,
+            getPath(`/api/v1/activities/${activity.id}`),
             body,
             config,
         );
@@ -143,7 +144,7 @@ export const deleteAction = (activity: Data, state: State, dispatch: React.Dispa
     if (state.requestInFlight) return;
     dispatch({ type: ActivityActionTypes.FETCH_DATA_REQUEST });
     try {
-        const response = await axios.delete(`/api/v1/activities/${activity.id}`);
+        const response = await axios.delete(getPath(`/api/v1/activities/${activity.id}`));
         state._data.delete(activity);
         const last = state._data.getSmallest().dateTime;
         dispatch({
@@ -170,7 +171,7 @@ export const loginAction = (username: string, password: string, state: State, di
     if (state.requestInFlight) return;
     dispatch({ type: ActivityActionTypes.LOGIN_REQUEST });
     try {
-        const response = await axios.post('/auth/login', {
+        const response = await axios.post(getPath('/auth/login'), {
             username,
             password,
         });
@@ -198,7 +199,7 @@ export const logoutAction = (state: State, dispatch: React.Dispatch<Action>) => 
     if (state.requestInFlight) return;
     dispatch({ type: ActivityActionTypes.LOGOUT_REQUEST });
     try {
-        const response = await axios.post('/auth/logout');
+        const response = await axios.post(getPath('/auth/logout'));
         dispatch({
             type: ActivityActionTypes.LOGOUT_SUCCESS,
             response: {

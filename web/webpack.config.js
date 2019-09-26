@@ -1,8 +1,15 @@
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const dotenv = require('dotenv');
+
+dotenv.config({ path: path.resolve(__dirname, '../server/.env') });
+
+console.log(process.env);
 
 const prod = process.env.NODE_ENV === 'production';
+const publicPath = process.env.PUBLIC_PATH || '/';
 
 const ForkTsCheckerPlugin = (!prod) ? require('fork-ts-checker-webpack-plugin') : null;
 const NodemonPlugin = (!prod) ? require('nodemon-webpack-plugin') : null;
@@ -11,6 +18,9 @@ const basePlugins = [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
         template: path.resolve(__dirname, './partials/index.html')
+    }),
+    new webpack.DefinePlugin({
+        PUBLIC_PATH: JSON.stringify(publicPath),
     }),
 ];
 
@@ -30,6 +40,7 @@ module.exports = {
     entry: path.resolve(__dirname, './src/index.tsx'),
     output: {
         path: path.resolve(__dirname, './build'),
+        publicPath,
         filename: '[name].[contenthash].js',
         chunkFilename: '[name].[contenthash].chunk.js',
     },

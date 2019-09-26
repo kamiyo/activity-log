@@ -11,6 +11,8 @@ import express from 'express';
 import { ApiRouter } from './api';
 import { LoginRouter } from './login';
 
+const port = parseInt(process.env.EXPRESS_PORT);
+
 const app = express();
 
 app.set('trusted-proxy', 'loopback');
@@ -56,7 +58,5 @@ app.get('/', csrfProtection, (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, '../../web/build')));
-
-const port = 8888;
 
 app.listen(port, '127.0.0.1', () => console.log(`App listening on port ${port}`));

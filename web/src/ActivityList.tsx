@@ -21,6 +21,7 @@ import { FlexBasisProperty, TextAlignProperty, GlobalsNumber } from 'csstype';
 import { fetchDataAction } from './actions';
 import { activityTypeMap } from './GroupedArray';
 import { ActivityListContext } from './App';
+import { getTimeAgo, formatDuration } from './utils';
 
 interface Column {
     id: 'dateTime' | 'type' | 'amount';
@@ -33,20 +34,6 @@ interface Column {
     textAlign?: TextAlignProperty;
     className?: string;
 }
-
-const getTimeAgo = (dateTime: DateTime) => {
-    const now = DateTime.local();
-    const diff = now.diff(dateTime, ['hours', 'minutes']);
-    const hours = diff.hours;
-    const minutes = Math.round(diff.minutes);
-    return `${hours} hr${hours > 1 ? 's' : ''} ${minutes} min${minutes > 1 ? 's' : ''} ago`;
-};
-
-export const formatDuration = (dur: Duration) => {
-    const hours = dur.hours;
-    const minutes = Math.round(dur.minutes);
-    return `-${hours} hr${hours > 1 ? 's' : ''} ${minutes} min${minutes > 1 ? 's' : ''}`;
-};
 
 const columns: Column[] = [
     {
@@ -118,6 +105,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
         paddingBottom: '5rem',
         maxWidth: '800px',
         width: '100%',
+        margin: 'auto',
         [theme.breakpoints.up('lg')]: {
             paddingTop: '2rem',
             flex: '1 1 auto',

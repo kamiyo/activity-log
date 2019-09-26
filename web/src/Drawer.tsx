@@ -12,7 +12,7 @@ import { logoutAction } from './actions';
 import { makeStyles, Theme, createStyles } from '@material-ui/core';
 import { activityTypeMap } from './GroupedArray';
 import { ActivityKeys, ActivityActionTypes } from './types';
-import { formatDuration } from './ActivityList';
+import { formatDuration } from './utils';
 import { useTheme } from '@material-ui/styles';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
