@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import argon from 'argon2';
+import * as path from 'path';
 
 import db from './models';
 import jwt from 'jsonwebtoken';
@@ -78,7 +79,7 @@ loginRouter.post('/login', async (req, res) => {
                 { issuer: 'jasboys.seanchenpiano.com', }
             );
             res.status(200).cookie('_al_jwt', token, {
-                path: '/api',
+                path: path.join('/', process.env.PUBLIC_PATH, '/api'),
                 maxAge: Number.MAX_SAFE_INTEGER,
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
