@@ -16,5 +16,5 @@ export const formatDuration = (dur: Duration) => {
 };
 
 export const getPath = (url: string) => {
-    return path.resolve('/', PUBLIC_PATH, url);
+    return path.join('/', PUBLIC_PATH, url);
 };
