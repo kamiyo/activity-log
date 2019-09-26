@@ -6,8 +6,6 @@ const dotenv = require('dotenv');
 
 dotenv.config({ path: path.resolve(__dirname, '../server/.env') });
 
-console.log(process.env);
-
 const prod = process.env.NODE_ENV === 'production';
 const publicPath = process.env.PUBLIC_PATH || '/';
 
