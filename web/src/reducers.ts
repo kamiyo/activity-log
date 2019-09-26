@@ -11,6 +11,7 @@ export const initialState: State = {
     loggedIn: true,
     filters: [],
     last: null,
+    stats: null,
 };
 
 const activityReducer = (state: State, action: Action): State => {
@@ -35,6 +36,7 @@ const activityReducer = (state: State, action: Action): State => {
                 ...state,
                 requestInFlight: false,
                 activities: state._data.toGrouped(),
+                stats: state._data.getStats(),
                 last: action.last,
                 response: action.response,
                 error: false,
@@ -75,6 +77,7 @@ const activityReducer = (state: State, action: Action): State => {
                 last: null,
                 hasMore: true,
                 error: false,
+                stats: null,
             };
         case ActivityActionTypes.FILTER:
 

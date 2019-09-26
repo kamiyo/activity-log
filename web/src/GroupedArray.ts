@@ -1,5 +1,5 @@
 import binarySearch from 'binary-search';
-import { Data, HasDateTime, RawData, DataGroup, ActivityKeys, ActivityInfo } from './types';
+import { Data, HasDateTime, RawData, DataGroup, ActivityKeys, ActivityInfo, Stats } from './types';
 import { DateTime, Duration } from 'luxon';
 
 export const activityTypeMap: Record<ActivityKeys, ActivityInfo> = {
@@ -56,7 +56,7 @@ class GroupedArray {
     length: number;
 
     getStats() {
-        let stats: Partial<Record<ActivityKeys, { mean: Duration, stdev: Duration }>> = {};
+        let stats: Partial<Stats> = {};
         Object.keys(activityTypeMap).forEach((key: ActivityKeys) => {
             let count: number = 0;
             let sum = this.array.reduce((prev, val) => {
@@ -77,7 +77,7 @@ class GroupedArray {
                 stdev: Duration.fromMillis(stdev).shiftTo('hours', 'minutes'),
             };
         });
-        return stats;
+        return stats as Stats;
     }
 
     private generateTimeBeforePrev() {

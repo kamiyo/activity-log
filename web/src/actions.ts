@@ -16,7 +16,6 @@ export const fetchDataAction = (state: State, dispatch: React.Dispatch<Action>) 
             };
         }
         const response = await axios.get<{ activities: RawData[] }>(getPath('/api/v1/activities'), config);
-        console.log(response);
         const hasMore = !!response.data.activities.length;
         state._data.push(...response.data.activities);
         const last = state._data.getSmallest().dateTime;

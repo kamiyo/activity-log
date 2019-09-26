@@ -6,6 +6,8 @@ export interface Response {
     message?: string,
 }
 
+export type Stats = Record<ActivityKeys, { mean: Duration, stdev: Duration }>;
+
 export interface State {
     _data: GroupedArray;
     activities: DataGroup[];
@@ -16,6 +18,7 @@ export interface State {
     response: Response;
     loggedIn: boolean;
     filters: ActivityKeys[];
+    stats: Stats;
 }
 
 export enum ActivityActionTypes {

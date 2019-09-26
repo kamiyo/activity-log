@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '../server/.env') });
 
 const prod = process.env.NODE_ENV === 'production';
-const publicPath = process.env.PUBLIC_PATH || '/';
+const publicPath = process.env.PUBLIC_PATH || '';
 
 const ForkTsCheckerPlugin = (!prod) ? require('fork-ts-checker-webpack-plugin') : null;
 const NodemonPlugin = (!prod) ? require('nodemon-webpack-plugin') : null;

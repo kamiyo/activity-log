@@ -63,7 +63,7 @@ const _Drawer: React.FC<DrawerProps> = ({ menuOpen, handleMenuOpen }) => {
         dispatch({ type: ActivityActionTypes.FILTER, filters });
     };
 
-    const stats = state._data.getStats();
+    const stats = state.stats;
     return (
         <Drawer open={menuOpen} onClose={() => handleMenuOpen(false)}>
             <List className={classes.menu}>
@@ -73,7 +73,7 @@ const _Drawer: React.FC<DrawerProps> = ({ menuOpen, handleMenuOpen }) => {
                     primary={<Typography>Time Statistics</Typography>}
                     secondary={
                     <div>
-                        {Object.keys(stats).map((key: ActivityKeys) => (
+                        {stats && Object.keys(stats).map((key: ActivityKeys) => (
                             <React.Fragment key={key}>
                                 <Typography key={`${key}-stats-emoji`}>
                                     {`${activityTypeMap[key].emoji}:`}
@@ -93,10 +93,10 @@ const _Drawer: React.FC<DrawerProps> = ({ menuOpen, handleMenuOpen }) => {
                     {filterOpen ? <ExpandLess /> : <ExpandMore />}
                 </ListItem>
                 <Collapse in={filterOpen} timeout="auto" unmountOnExit>
-                    <List disablePadding>
+                    <List disablePadding key="filter-list">
                         {Object.keys(activityTypeMap).map((key: ActivityKeys) => {
                             return (
-                                <ListItem button dense onClick={() => handleFilter(key)}>
+                                <ListItem button dense onClick={() => handleFilter(key)} key={`filter-${key}`}>
                                     <ListItemIcon className={classes.itemIcon}>
                                         <Checkbox
                                             edge="start"
