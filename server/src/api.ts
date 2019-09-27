@@ -3,8 +3,9 @@ import { FindOptions, Op } from 'sequelize';
 import * as uniqid from 'uniqid';
 
 import db from './models';
-import { DateTime } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 import { verifyLogin } from './login';
+import { ActivityType, ActivityTypeMap } from './models/activity';
 const models = db.models;
 
 const apiRouter = Router();
@@ -14,6 +15,10 @@ const handleError = (res: Response, err: string) => {
 }
 
 apiRouter.use(verifyLogin);
+
+const generateTimeSinceHook = async () => {
+
+}
 
 apiRouter.get('/activities', async (req, res) => {
     const {

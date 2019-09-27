@@ -5,6 +5,7 @@ export class User extends Model {
     readonly id: string;
     readonly username: string;
     readonly hash: string;
+    readonly role: string;
 }
 
 export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
@@ -18,6 +19,7 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         },
         username: dataTypes.STRING,
         hash: dataTypes.STRING,
+        role: dataTypes.STRING,
     }, {
         sequelize,
         tableName: 'user',

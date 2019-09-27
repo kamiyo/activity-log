@@ -1,7 +1,15 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import { string } from 'prop-types';
 
-type ActivityType = 'meal' | 'poop' | 'nurse' | 'bath' | 'sleep';
+export const ActivityTypeMap: Record<ActivityType, string> = {
+    meal: 'meal',
+    poop: 'poop',
+    nurse: 'nurse',
+    bath: 'bath',
+    sleep: 'sleep',
+}
+
+export type ActivityType = 'meal' | 'poop' | 'nurse' | 'bath' | 'sleep';
 
 export class Activity extends Model {
     readonly id: string;
@@ -9,6 +17,7 @@ export class Activity extends Model {
     readonly type: ActivityType;
     readonly amount?: number;
     readonly notes: string;
+    readonly timeBeforePrev: number;
 }
 
 export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
@@ -23,6 +32,7 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         type: dataTypes.STRING,
         amount: dataTypes.DECIMAL(10, 2),
         notes: dataTypes.TEXT(),
+        timeBeforePrev: dataTypes.BIGINT
     }, {
         sequelize,
         tableName: 'activity',

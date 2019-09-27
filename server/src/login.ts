@@ -31,7 +31,12 @@ export const verifyLogin: RequestHandler<Dictionary<string>> = async (req, res, 
                 },
             });
             if (!user) {
-                throw 'user not found';
+                throw 'user not found.';
+            }
+            if (req.method !== 'GET') {
+                if (user.role !== 'write') {
+                    throw 'user not authorized for request.'
+                }
             }
             return next();
         } catch (err) {
@@ -44,7 +49,8 @@ export const verifyLogin: RequestHandler<Dictionary<string>> = async (req, res, 
     if (req.headers.authorization) {
         const auth = req.headers.authorization;
         const strings = auth.split(' ');
-        if (strings[1] !== process.env.DEV_API_KEY) {
+        if (strings[1] !== process.env.DEV_API_KEY
+            && req.method !== 'GET') {
             return res.status(403).json({
                 error: 'Invalid credentials.',
             });
