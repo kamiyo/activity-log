@@ -1,11 +1,13 @@
 import { Router, Response } from 'express';
-import { FindOptions, Op } from 'sequelize';
+import { FindOptions, Op, WhereOperators, Transaction, QueryTypes, QueryOptionsWithType } from 'sequelize';
 import * as uniqid from 'uniqid';
 
 import db from './models';
-import { DateTime, Duration } from 'luxon';
+import { DateTime } from 'luxon';
 import { verifyLogin } from './login';
-import { ActivityType, ActivityTypeMap } from './models/activity';
+import { Activity } from './models/activity';
+import { TimeStats } from './models/timeStats';
+// import { ActivityType, ActivityTypeMap } from './models/activity';
 const models = db.models;
 
 const apiRouter = Router();
@@ -16,9 +18,49 @@ const handleError = (res: Response, err: string) => {
 
 apiRouter.use(verifyLogin);
 
-const generateTimeSinceHook = async () => {
-
-}
+const generateTimeSinceAndStats = async (t: Transaction): Promise<{ activities: [Activity[], number]; stats: [TimeStats[], number] }> => {
+    const result = await db.sequelize.query(`
+        UPDATE activity SET "timeBeforePrev" = diffs.diff
+        FROM (
+            SELECT
+                id,
+                LAG(activity."dateTime", 1) OVER (
+                    PARTITION BY activity."type"
+                    ORDER BY activity."dateTime" DESC
+                ) - activity."dateTime" AS diff
+            FROM activity
+        ) AS diffs
+        WHERE activity.id = diffs.id
+        AND "timeBeforePrev" IS DISTINCT FROM diffs.diff
+        RETURNING activity.*
+    `, {
+        transaction: t,
+        type: QueryTypes.UPDATE,
+        model: models.Activity,
+        mapToModel: true,
+    } as QueryOptionsWithType<QueryTypes.UPDATE>);
+    const stats = await db.sequelize.query(`
+        UPDATE "timeStats" SET average = stats.avg, stddev = stats.stddev
+        FROM (
+        SELECT
+            TYPE,
+            AVG("timeBeforePrev") as avg,
+            make_interval(secs=>stddev(EXTRACT(EPOCH FROM "timeBeforePrev"))) as stddev
+        FROM activity GROUP BY "type"
+        ) AS stats
+        WHERE stats.type = "timeStats".type
+        RETURNING "timeStats".*
+    `, {
+        transaction: t,
+        type: QueryTypes.UPDATE,
+        model: models.TimeStats,
+        mapToModel: true,
+    } as QueryOptionsWithType<QueryTypes.UPDATE>);
+    return {
+        activities: result,
+        stats,
+    };
+};
 
 apiRouter.get('/activities', async (req, res) => {
     const {
@@ -37,7 +79,7 @@ apiRouter.get('/activities', async (req, res) => {
         ],
     };
 
-    const dateTime: any = {};
+    const dateTime: WhereOperators = {};
 
     if (type || limit) {
         if (type) {
@@ -69,19 +111,30 @@ apiRouter.get('/activities', async (req, res) => {
     }
 
     try {
-        let activities = await models.Activity.findAll(findOptions);
-        if (activities.length === 0) {
-            activities = await models.Activity.findAll({
-                attributes: {
-                    exclude: ['createdAt', 'updatedAt'],
-                },
-                order: [
-                    ['dateTime', 'DESC'],
-                ],
-                limit: 20,
+        const [activities, stats] = await db.sequelize.transaction(async t => {
+            let returned = await models.Activity.findAll({
+                ...findOptions,
+                transaction: t,
             });
-        }
-        res.json({ activities });
+            if (returned.length === 0) {
+                returned = await models.Activity.findAll({
+                    attributes: {
+                        exclude: ['createdAt', 'updatedAt'],
+                    },
+                    order: [
+                        ['dateTime', 'DESC'],
+                    ],
+                    limit: 20,
+                    transaction: t,
+                });
+            }
+            const stats = await models.TimeStats.findAll({
+                transaction: t,
+            });
+            return [returned, stats];
+        });
+
+        res.json({ activities, stats });
     } catch (err) {
         handleError(res, err);
     }
@@ -107,27 +160,30 @@ apiRouter.post('/activities', async (req, res) => {
     const id = uniqid.process();
 
     try {
-        await models.Activity.create({
-            id,
-            dateTime,
-            type,
-            notes,
-            amount: amount ? parseFloat(amount) : null,
-        });
-
-        const [created] = await models.Activity.findAll({
-            where: {
+        const [created, activities, stats] = await db.sequelize.transaction(async t => {
+            const newAct = await models.Activity.create({
                 id,
-            },
-            attributes: {
-                exclude: ['createdAt', 'updatedAt'],
-            },
+                dateTime,
+                type,
+                notes,
+                amount: amount ? parseFloat(amount) : null,
+            }, { transaction: t });
+            const {
+                activities: returned,
+                stats: [statistics,],
+            } = await generateTimeSinceAndStats(t);
+            let [changed,] = returned;
+
+            changed = [newAct, ...changed];
+            if (!!after) {
+                changed = changed.filter((act) => DateTime.fromJSDate(act.dateTime) > DateTime.fromSeconds(parseInt(after)));
+            }
+            return [newAct, changed, statistics];
         });
 
         res.json({
-            activities: (!!after && DateTime.fromJSDate(created.dateTime) > DateTime.fromSeconds(parseInt(after)))
-                ? [created]
-                : [],
+            activities,
+            stats,
             created,
         });
     } catch (err) {
@@ -149,28 +205,33 @@ apiRouter.put('/activities/:id', async (req, res) => {
     } = req.query;
 
     try {
-        await models.Activity.update({
-            dateTime,
-            type,
-            notes,
-            amount: amount ? parseFloat(amount) : null,
-        }, {
-            where: { id },
-        });
+        const [updated, activities, stats] = await db.sequelize.transaction(async (t) => {
+            const [, [modified]] = await models.Activity.update({
+                dateTime,
+                type,
+                notes,
+                amount: amount ? parseFloat(amount) : null,
+            }, {
+                where: { id },
+                returning: true,
+                transaction: t,
+            });
+            const {
+                activities: returned,
+                stats: [statistics,],
+            } = await generateTimeSinceAndStats(t);
+            let [changed,] = returned;
 
-        const [updated] = await models.Activity.findAll({
-            where: {
-                id,
-            },
-            attributes: {
-                exclude: ['createdAt', 'updatedAt'],
-            },
+            changed = [modified, ...changed];
+            if (!!after) {
+                changed = changed.filter((act) => DateTime.fromJSDate(act.dateTime) > DateTime.fromSeconds(parseInt(after)));
+            }
+            return [modified, changed, statistics];
         });
 
         res.json({
-            activities: (!!after && DateTime.fromJSDate(updated.dateTime) > DateTime.fromSeconds(parseInt(after)))
-                ? [updated]
-                : [],
+            activities,
+            stats,
             updated,
         });
     } catch (err) {
@@ -179,13 +240,41 @@ apiRouter.put('/activities/:id', async (req, res) => {
 });
 
 apiRouter.delete('/activities/:id', async (req, res) => {
+    const {
+        after
+    } = req.query;
+
     try {
-        await models.Activity.destroy({
-            where: {
-                id: req.params.id,
-            },
+        const [deleted, activities, stats] = await db.sequelize.transaction(async t => {
+            const toDelete = await models.Activity.findAll({
+                where: {
+                    id: req.params.id,
+                },
+                transaction: t,
+            });
+            await models.Activity.destroy({
+                where: {
+                    id: req.params.id,
+                },
+                transaction: t,
+            });
+            const {
+                activities: returned,
+                stats: [statistics,],
+            } = await generateTimeSinceAndStats(t);
+            let [changed,] = returned;
+
+            if (!!after) {
+                changed = changed.filter((act) => DateTime.fromJSDate(act.dateTime) > DateTime.fromSeconds(parseInt(after)));
+            }
+            return [toDelete, changed, statistics];
         });
-        res.status(200).json({});
+
+        res.json({
+            deleted,
+            stats,
+            activities,
+        });
     } catch (err) {
         handleError(res, err);
     }

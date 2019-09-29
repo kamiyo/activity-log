@@ -8,7 +8,7 @@ import Grid from '@material-ui/core/Grid';
 import Typography, { TypographyProps } from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import throttle from 'lodash/throttle';
-import { DateTime, Duration } from 'luxon';
+import { DateTime } from 'luxon';
 import { makeStyles, createStyles } from '@material-ui/styles';
 import { useTheme, Theme } from '@material-ui/core';
 import LinearProgress from '@material-ui/core/LinearProgress';
@@ -21,7 +21,7 @@ import { FlexBasisProperty, TextAlignProperty, GlobalsNumber } from 'csstype';
 import { fetchDataAction } from './actions';
 import { activityTypeMap } from './GroupedArray';
 import { ActivityListContext } from './App';
-import { getTimeAgo, formatDuration } from './utils';
+import { getTimeAgo, formatInterval } from './utils';
 
 interface Column {
     id: 'dateTime' | 'type' | 'amount';
@@ -38,7 +38,7 @@ interface Column {
 const columns: Column[] = [
     {
         id: 'dateTime',
-        format: (dateTime: DateTime) => {
+        format: (dateTime: DateTime): string => {
             return dateTime.toLocaleString(DateTime.TIME_24_SIMPLE);
         },
         gridWidth: 8,
@@ -49,7 +49,7 @@ const columns: Column[] = [
     },
     {
         id: 'type',
-        format: (type: ActivityKeys) => {
+        format: (type: ActivityKeys): string => {
             return type ? activityTypeMap[type].emoji : '';
         },
         minWidth: '2rem',
@@ -62,7 +62,7 @@ const columns: Column[] = [
     },
     {
         id: 'amount',
-        format: (amount: string, type: ActivityKeys) => {
+        format: (amount: string, type: ActivityKeys): string => {
             const units = activityTypeMap[type] ? activityTypeMap[type].units : '';
             return (amount && units) ? `${amount} ${units}` : '';
         },
@@ -148,7 +148,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 const onScroll = (threshold: number, fetchData: () => Promise<void>) =>
-    (event: React.SyntheticEvent<HTMLDivElement, Event>) => {
+    (event: React.SyntheticEvent<HTMLDivElement, Event>): void => {
         const el = (event.target as HTMLDivElement);
         const height = el.getBoundingClientRect().height;
         const scrollTop = el.scrollTop;
@@ -183,13 +183,13 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
         <Paper className={classes.root} square>
             <div
                 className={classes.tableWrapper}
-                onScroll={(event) => {
+                onScroll={(event): void => {
                     event.persist();
                     debouncedScroll(event);
                 }}
             >
                 <List className={classes.mainList}>
-                    {state.activities.map((section: DataGroup, idy) => {
+                    {state.activities.map((section: DataGroup) => {
                         return (
                             <li key={section.dateTime.toISODate()}>
                                 <ul key={`${section.dateTime.toISODate()}-ul`} className={classes.list}>
@@ -227,7 +227,7 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
                                             </Grid>
                                         </Grid>
                                     </MyListSubheader>
-                                    {section.data.map((activity: Data, idx, arr) => {
+                                    {section.data.map((activity: Data, idx) => {
                                         return (!state.filters.length ||
                                             (activity.type !== '' && state.filters.indexOf(activity.type) !== -1))
                                             && (
@@ -238,7 +238,7 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
                                                     <ListItem
                                                         key={`${activity.dateTime.toISO()}-${activity.type}`}
                                                         button
-                                                        onClick={() => {
+                                                        onClick={(): void => {
                                                             handleSelect(activity);
                                                             handleIsEdit(true);
                                                             handleOpenDialog(true);
@@ -254,7 +254,7 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
                                                                 const value = activity[column.id];
                                                                 const { flexBasis, flexGrow, textAlign, align, gridWidth, className } = column;
                                                                 const primaryProps: Partial<TypographyProps> = { align };
-                                                                const columnClass = classes[column.className as keyof typeof classes] || '';
+                                                                const columnClass = classes[className as keyof typeof classes] || '';
                                                                 return (
                                                                     <Grid
                                                                         key={column.id}
@@ -280,7 +280,7 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
                                                                                     <Typography className={classes.aside}>
                                                                                         {(activity.timeBeforePrev === null)
                                                                                             ? getTimeAgo(value)
-                                                                                            : formatDuration(activity.timeBeforePrev)
+                                                                                            : formatInterval(activity.timeBeforePrev)
                                                                                         }
                                                                                     </Typography>
                                                                                     {(activity.notes) &&

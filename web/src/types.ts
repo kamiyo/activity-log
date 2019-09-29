@@ -1,12 +1,10 @@
-import { DateTime, Duration } from 'luxon';
+import { DateTime } from 'luxon';
 import GroupedArray from './GroupedArray';
 
 export interface Response {
-    status?: number,
-    message?: string,
+    status?: number;
+    message?: string;
 }
-
-export type Stats = Record<ActivityKeys, { mean: Duration, stdev: Duration }>;
 
 export interface State {
     _data: GroupedArray;
@@ -49,11 +47,25 @@ export interface BaseData extends HasDateTime {
 
 export interface RawData extends BaseData {
     dateTime: string;
+    timeBeforePrev?: Interval;
+}
+
+export interface Interval {
+    days?: number;
+    hours?: number;
+    minutes?: number;
+    seconds?: number;
+}
+
+export interface Stats {
+    type: ActivityKeys;
+    average: Interval;
+    stddev: Interval;
 }
 
 export interface Data extends BaseData {
     dateTime: DateTime;
-    timeBeforePrev?: Duration;
+    timeBeforePrev?: Interval;
 }
 
 export interface DataGroup extends HasDateTime {
@@ -66,25 +78,39 @@ export interface DataGroup extends HasDateTime {
 }
 
 export type Action =
-    | { type: ActivityActionTypes.FETCH_DATA_FAILURE,
-        response: Response, }
-    | { type: ActivityActionTypes.FETCH_DATA_SUCCESS,
-        last: DateTime,
-        hasMore?: boolean,
-        response: Response, }
+    | {
+        type: ActivityActionTypes.FETCH_DATA_FAILURE;
+        response: Response;
+    }
+    | {
+        type: ActivityActionTypes.FETCH_DATA_SUCCESS;
+        last: DateTime;
+        hasMore?: boolean;
+        response: Response;
+    }
     | { type: ActivityActionTypes.FETCH_DATA_REQUEST }
     | { type: ActivityActionTypes.LOGIN_REQUEST }
-    | { type: ActivityActionTypes.LOGIN_FAILURE,
-        response: Response, }
-    | { type: ActivityActionTypes.LOGIN_SUCCESS,
-        response: Response, }
+    | {
+        type: ActivityActionTypes.LOGIN_FAILURE;
+        response: Response;
+    }
+    | {
+        type: ActivityActionTypes.LOGIN_SUCCESS;
+        response: Response;
+    }
     | { type: ActivityActionTypes.LOGOUT_REQUEST }
-    | { type: ActivityActionTypes.LOGOUT_FAILURE,
-        response: Response, }
-    | { type: ActivityActionTypes.LOGOUT_SUCCESS,
-        response: Response, }
-    | { type: ActivityActionTypes.FILTER,
-        filters: ActivityKeys[], };
+    | {
+        type: ActivityActionTypes.LOGOUT_FAILURE;
+        response: Response;
+    }
+    | {
+        type: ActivityActionTypes.LOGOUT_SUCCESS;
+        response: Response;
+    }
+    | {
+        type: ActivityActionTypes.FILTER;
+        filters: ActivityKeys[];
+    };
 
 
 export interface ActivityInfo {
@@ -93,3 +119,26 @@ export interface ActivityInfo {
 }
 
 export type ActivityKeys = 'meal' | 'poop' | 'nurse' | 'bath' | 'sleep';
+
+export interface GetResponseData {
+    activities: RawData[];
+    stats: Stats[];
+}
+
+export interface PostResponseData {
+    activities: RawData[];
+    stats: Stats[];
+    created: RawData;
+}
+
+export interface PutResponseData {
+    activities: RawData[];
+    stats: Stats[];
+    updated: RawData;
+}
+
+export interface DeleteResponseData {
+    activities: RawData[];
+    stats: Stats[];
+    deleted: RawData;
+}

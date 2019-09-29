@@ -1,5 +1,5 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import { string } from 'prop-types';
+const withInterval = require('sequelize-interval-postgres');
 
 export const ActivityTypeMap: Record<ActivityType, string> = {
     meal: 'meal',
@@ -21,6 +21,8 @@ export class Activity extends Model {
 }
 
 export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+    const dataTypesWithInterval = withInterval(dataTypes);
+
     Activity.init({
         id: {
             type: dataTypes.STRING,
@@ -32,7 +34,7 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         type: dataTypes.STRING,
         amount: dataTypes.DECIMAL(10, 2),
         notes: dataTypes.TEXT(),
-        timeBeforePrev: dataTypes.BIGINT
+        timeBeforePrev: dataTypesWithInterval.INTERVAL,
     }, {
         sequelize,
         tableName: 'activity',

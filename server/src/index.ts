@@ -35,6 +35,7 @@ const csrfProtection = csurf({
         httpOnly: true,
         sameSite: true,
         domain: process.env.NODE_ENV === 'production' ? 'jasboys.seanchenpiano.com' : 'localhost',
+        path: path.join('/', process.env.PUBLIC_PATH || ''),
     },
 });
 const parseForm = express.urlencoded({ extended: false });
@@ -52,7 +53,8 @@ app.get('/', csrfProtection, (req, res) => {
         secure: process.env.NODE_ENV === 'production',
         sameSite: true,
         httpOnly: true,
-        domain: process.env.NODE_ENV === 'production' ? 'jasboys.seanchenpiano.com' : 'localhost'
+        domain: process.env.NODE_ENV === 'production' ? 'jasboys.seanchenpiano.com' : 'localhost',
+        path: path.join('/', process.env.PUBLIC_PATH || ''),
     });
     res.render('index', { csrfToken: req.csrfToken() });
 });

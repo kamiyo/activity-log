@@ -11,6 +11,7 @@ const models = db.models;
 const loginRouter = Router();
 
 const jwtSecret = process.env.JWT_SECRET;
+const publicPath = process.env.PUBLIC_PATH || '/';
 
 export const verifyLogin: RequestHandler<Dictionary<string>> = async (req, res, next) => {
     const jwtCookie = req.cookies['_al_jwt'];
@@ -85,7 +86,7 @@ loginRouter.post('/login', async (req, res) => {
                 { issuer: 'jasboys.seanchenpiano.com', }
             );
             res.status(200).cookie('_al_jwt', token, {
-                path: path.join('/', process.env.PUBLIC_PATH, '/api'),
+                path: path.join('/', publicPath, '/api'),
                 maxAge: Number.MAX_SAFE_INTEGER,
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',

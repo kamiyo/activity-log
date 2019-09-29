@@ -26,9 +26,10 @@ export default new Sequelize(
             charSet: 'utf8',
             collate: 'utf8_unicode_ci',
         },
-        pool: {max: 5, min: 0, idle: 10000},
+        pool: { max: 5, min: 0, idle: 10000 },
         define: {
             freezeTableName: true,
+            timestamps: false,
         },
         logging: (str: string) => console.log(str),
     }

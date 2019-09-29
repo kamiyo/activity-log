@@ -1,5 +1,4 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import { string } from 'prop-types';
 
 export class User extends Model {
     readonly id: string;

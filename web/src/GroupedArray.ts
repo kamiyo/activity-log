@@ -1,6 +1,6 @@
 import binarySearch from 'binary-search';
-import { Data, HasDateTime, RawData, DataGroup, ActivityKeys, ActivityInfo, Stats } from './types';
-import { DateTime, Duration } from 'luxon';
+import { Data, HasDateTime, RawData, DataGroup, ActivityKeys, ActivityInfo } from './types';
+import { DateTime } from 'luxon';
 
 export const activityTypeMap: Record<ActivityKeys, ActivityInfo> = {
     meal: { emoji: '🍼', units: 'oz' },
@@ -12,7 +12,7 @@ export const activityTypeMap: Record<ActivityKeys, ActivityInfo> = {
 
 export type comparator<T> = (a: T, b: T, index?: number, array?: T[]) => number;
 
-export const dataComp = (a: HasDateTime, b: HasDateTime) => {
+export const dataComp = (a: HasDateTime, b: HasDateTime): 0 | 1 | -1 => {
     const aDateTime = a.dateTime;
     const bDateTime = b.dateTime;
     if (a.id === b.id) {
@@ -55,45 +55,7 @@ class GroupedArray {
     readonly comparator: comparator<HasDateTime>;
     length: number;
 
-    getStats() {
-        let stats: Partial<Stats> = {};
-        Object.keys(activityTypeMap).forEach((key: ActivityKeys) => {
-            let count: number = 0;
-            let sum = this.array.reduce((prev, val) => {
-                if (val.type !== key) return prev;
-                if (!val.timeBeforePrev) return prev;
-                count++;
-                return prev + val.timeBeforePrev.as('milliseconds');
-            }, 0);
-            const mean = (count > 1) ? sum / count : 0;
-            let stdev = this.array.reduce((prev, val) => {
-                if (val.type !== key) return prev;
-                if (!val.timeBeforePrev) return prev;
-                return prev + Math.pow(val.timeBeforePrev.as('milliseconds') - mean, 2);
-            }, 0);
-            stdev = (count > 1) ? Math.sqrt(stdev / (count - 1)) : 0;
-            stats[key as ActivityKeys] = {
-                mean: Duration.fromMillis(mean).shiftTo('hours', 'minutes'),
-                stdev: Duration.fromMillis(stdev).shiftTo('hours', 'minutes'),
-            };
-        });
-        return stats as Stats;
-    }
-
-    private generateTimeBeforePrev() {
-        Object.keys(activityTypeMap).forEach((key) => {
-            let prev: DateTime = null;
-            this.array.forEach((val, idx, arr) => {
-                if (val.type !== key) return;
-                const dur: Duration = prev ? prev.diff(val.dateTime, ['hours', 'minutes']) : null;
-                arr[idx].timeBeforePrev = dur;
-                prev = val.dateTime;
-            });
-        });
-    }
-
-    private generateNodes() {
-        this.generateTimeBeforePrev();
+    private generateNodes(): void {
         this.nodes = [];
         if (this.length === 0) {
             return;
@@ -153,22 +115,22 @@ class GroupedArray {
         });
     }
 
-    empty() {
+    empty(): boolean {
         return !this.array.length;
     }
 
-    getSmallest() {
+    getSmallest(): Data {
         return this.array[this.length - 1];
     }
 
-    set(index: number, value: Data) {
+    set(index: number, value: Data): void {
         // instead of setting, we will remove and insert
         this.array.splice(index, 1);
         this.length = this.array.length;
         this.push(value);
     }
 
-    private _push(...value: Data[]) {
+    private _push(...value: Data[]): void {
         value.forEach((val) => {
             const idx = binarySearch(this.array, val, this.comparator);
             // exists
@@ -184,7 +146,7 @@ class GroupedArray {
         });
     }
 
-    push(...value: Data[] | RawData[]) {
+    push(...value: Data[] | RawData[]): this {
         if (!value.length) {
             return this;
         }
@@ -197,7 +159,7 @@ class GroupedArray {
         return this;
     }
 
-    concat(s: GroupedArray) {
+    concat(s: GroupedArray): this {
         if (this.empty()) {
             this.array = [...s.array];
             this.length = this.array.length;
@@ -211,15 +173,15 @@ class GroupedArray {
         return this;
     }
 
-    map<R>(mapFn: (value: Data, index?: number, array?: Data[]) => R, thisArg?: this): R[] {
+    map<R>(mapFn: (value: Data, index?: number, array?: Data[]) => R): R[] {
         return this.array.map(mapFn);
     }
 
-    forEach(callback: (value: Data, index?: number, array?: Data[]) => void, thisArg?: this) {
+    forEach(callback: (value: Data, index?: number, array?: Data[]) => void): void {
         this.array.forEach(callback);
     }
 
-    find(value: Data) {
+    find(value: Data): Data {
         if (this.empty()) {
             return undefined;
         }
@@ -230,22 +192,22 @@ class GroupedArray {
         return this.array[idx];
     }
 
-    indexOf(value: Data) {
+    indexOf(value: Data): number {
         if (this.empty()) {
             return -1;
         }
         return binarySearch(this.array, value, this.comparator);
     }
 
-    findIndex(fn: (curr: Data, index?: number, array?: Data[])=> boolean, thisArg?: this) {
+    findIndex(fn: (curr: Data, index?: number, array?: Data[]) => boolean): number {
         return this.array.findIndex(fn);
     }
 
-    reduce<U>(fn: (prev: U, curr: Data, index?: number, array?: Data[]) => U, initialValue?: U) {
+    reduce<U>(fn: (prev: U, curr: Data, index?: number, array?: Data[]) => U, initialValue?: U): U {
         return this.array.reduce(fn, initialValue);
     }
 
-    delete(value: Data) {
+    delete(value: Data): this {
         if (this.empty()) {
             return this;
         }
@@ -256,18 +218,20 @@ class GroupedArray {
         this.array.splice(idx, 1);
         this.length = this.array.length;
         this.generateNodes();
+        return this;
     }
 
-    deleteIndex(index: number) {
+    deleteIndex(index: number): Data[] {
         if (this.empty()) {
-            return this;
+            return undefined;
         }
         if (index < 0) {
-            return this;
+            return undefined;
         }
-        this.array.splice(index, 1);
+        const deleted = this.array.splice(index, 1);
         this.length = this.array.length;
         this.generateNodes();
+        return deleted;
     }
 }
 

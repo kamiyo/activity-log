@@ -1,8 +1,10 @@
 import { DataTypes, QueryInterface } from 'sequelize';
+const withInterval = require('sequelize-interval-postgres');
 
 export const up = async (queryInterface: QueryInterface, dataTypes: typeof DataTypes) => {
+    const dataTypesWithInterval = withInterval(dataTypes);
     await queryInterface.addColumn('activity', 'timeBeforePrev', {
-        type: dataTypes.BIGINT,
+        type: dataTypesWithInterval.INTERVAL,
         allowNull: true,
     });
 };
