@@ -17,6 +17,7 @@ export const formatDuration = (dur: Duration): string => {
 };
 
 export const formatInterval = (interval: Interval, initial = '-'): string => {
+    if (!interval) return 'null';
     return Object.entries(interval).reduce((prev, [unit, amount]: [string, number]) => {
         const rounded = Math.round(amount);
         if (rounded === 0) return prev;
