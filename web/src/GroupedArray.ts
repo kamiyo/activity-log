@@ -1,6 +1,7 @@
 import binarySearch from 'binary-search';
 import { Data, HasDateTime, RawData, DataGroup, ActivityKeys, ActivityInfo } from './types';
 import { DateTime } from 'luxon';
+import { array } from 'prop-types';
 
 export const activityTypeMap: Record<ActivityKeys, ActivityInfo> = {
     meal: { emoji: '🍼', units: 'oz' },
@@ -60,15 +61,15 @@ class GroupedArray {
         if (this.length === 0) {
             return;
         }
-        const max = this.array[0].dateTime.startOf('day');
+        const max = this.array[0].dateTime.endOf('day');
         const min = this.array[this.length - 1].dateTime.startOf('day');
         for (let it = max; it >= min; it = it.minus({ days: 1 })) {
-            let index = binarySearch(this.array, { dateTime: it.plus({ days: 1 }) }, this.comparator);
+            let index = binarySearch(this.array, { dateTime: it }, this.comparator);
             if (index < 1) {
                 index = (-1 * index) - 1;
             }
             this.nodes.push({
-                dateTime: it,
+                dateTime: it.startOf('day'),
                 index,
             });
         }
