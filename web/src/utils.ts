@@ -34,7 +34,9 @@ export const rawToStats = (stats: RawStats[]): Stats => {
         const type = stat.type;
         delete stat.type;
         Object.entries(stat as BaseStats).forEach(([key, interval]: [keyof BaseStats, Interval]) => {
-            stat[key] = Duration.fromObject(interval).shiftTo('days', 'hours', 'minutes').normalize().toObject();
+            if (stat[key] !== null) {
+                stat[key] = Duration.fromObject(interval).shiftTo('days', 'hours', 'minutes').normalize().toObject();
+            }
         });
         return ({
             ...prev,
