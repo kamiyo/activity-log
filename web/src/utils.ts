@@ -18,8 +18,10 @@ export const formatDuration = (dur: Duration): string => {
 
 export const formatInterval = (interval: Interval, initial = '-'): string => {
     return Object.entries(interval).reduce((prev, [unit, amount]: [string, number]) => {
-        const adjustedUnit = (amount > 1) ? unit : unit.substring(0, unit.length - 1);
-        return prev + ((prev === 'initial') ? '' : ' ') + `${amount} ${adjustedUnit}`;
+        const rounded = Math.round(amount);
+        if (rounded === 0) return prev;
+        const adjustedUnit = (rounded > 1) ? unit : unit.substring(0, unit.length - 1);
+        return prev + ((prev === initial) ? '' : ' ') + `${rounded} ${adjustedUnit}`;
     }, initial);
 };
 
@@ -31,6 +33,9 @@ export const rawToStats = (stats: RawStats[]): Stats => {
     return stats.reduce((prev, stat) => {
         const type = stat.type;
         delete stat.type;
+        Object.entries(stat as BaseStats).forEach(([key, interval]: [keyof BaseStats, Interval]) => {
+            stat[key] = Duration.fromObject(interval).shiftTo('days', 'hours', 'minutes').normalize().toObject();
+        });
         return ({
             ...prev,
             [type]: {

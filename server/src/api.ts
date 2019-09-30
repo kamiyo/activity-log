@@ -40,16 +40,14 @@ const generateTimeSinceAndStats = async (t: Transaction): Promise<{ activities: 
         mapToModel: true,
     } as QueryOptionsWithType<QueryTypes.UPDATE>);
     const stats = await db.sequelize.query(`
-        UPDATE "timeStats" SET average = stats.avg, stddev = stats.stddev
-        FROM (
+        INSERT INTO "timeStats"
         SELECT
-            TYPE,
-            AVG("timeBeforePrev") as avg,
-            make_interval(secs=>stddev(EXTRACT(EPOCH FROM "timeBeforePrev"))) as stddev
+            TYPE as type,
+            AVG("timeBeforePrev") AS average,
+            make_interval(secs=>stddev(EXTRACT(EPOCH FROM "timeBeforePrev"))) AS stddev
         FROM activity GROUP BY "type"
-        ) AS stats
-        WHERE stats.type = "timeStats".type
-        RETURNING "timeStats".*
+        ON CONFLICT (type) DO UPDATE SET average = EXCLUDED.average, stddev = EXCLUDED.stddev
+        RETURNING *
     `, {
         transaction: t,
         type: QueryTypes.UPDATE,
@@ -246,7 +244,7 @@ apiRouter.delete('/activities/:id', async (req, res) => {
 
     try {
         const [deleted, activities, stats] = await db.sequelize.transaction(async t => {
-            const toDelete = await models.Activity.findAll({
+            const [toDelete] = await models.Activity.findAll({
                 where: {
                     id: req.params.id,
                 },
