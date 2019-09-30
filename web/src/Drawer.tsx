@@ -11,8 +11,8 @@ import { ActivityListContext } from './App';
 import { logoutAction } from './actions';
 import { makeStyles, Theme, createStyles } from '@material-ui/core';
 import { activityTypeMap } from './GroupedArray';
-import { ActivityKeys, ActivityActionTypes } from './types';
-import { formatDuration } from './utils';
+import { ActivityKeys, ActivityActionTypes, BaseStats } from './types';
+import { formatDuration, formatInterval } from './utils';
 import { useTheme } from '@material-ui/styles';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
@@ -25,8 +25,8 @@ interface DrawerProps {
 }
 
 const statMap = {
-    mean: 'μ',
-    stdev: 'σ',
+    average: 'μ',
+    stddev: 'σ',
 };
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -52,7 +52,7 @@ const _Drawer: React.FC<DrawerProps> = ({ menuOpen, handleMenuOpen }) => {
     const classes = useStyles(theme);
     const [filterOpen, handleFilterOpen] = React.useState(false);
 
-    const handleFilter = (filter: ActivityKeys) => {
+    const handleFilter = (filter: ActivityKeys): void => {
         const filters = [...state.filters]
         const idx = state.filters.indexOf(filter);
         if (idx !== -1) {
@@ -65,30 +65,30 @@ const _Drawer: React.FC<DrawerProps> = ({ menuOpen, handleMenuOpen }) => {
 
     const stats = state.stats;
     return (
-        <Drawer open={menuOpen} onClose={() => handleMenuOpen(false)}>
+        <Drawer open={menuOpen} onClose={(): void => handleMenuOpen(false)}>
             <List className={classes.menu}>
                 <ListItem key="stats">
                     <ListItemText
-                    disableTypography
-                    primary={<Typography>Time Statistics</Typography>}
-                    secondary={
-                    <div>
-                        {stats && Object.keys(stats).map((key: ActivityKeys) => (
-                            <React.Fragment key={key}>
-                                <Typography key={`${key}-stats-emoji`}>
-                                    {`${activityTypeMap[key].emoji}:`}
-                                </Typography>
-                                {Object.entries(stats[key as ActivityKeys]).map(([k, stat]) => (
-                                    <Typography key={`${key}-stats-${k}`} className={classes.stats}>
-                                        {`${statMap[k as keyof typeof statMap]}: ${formatDuration(stat).substr(1)}`}
-                                    </Typography>
+                        disableTypography
+                        primary={<Typography>Time Statistics</Typography>}
+                        secondary={
+                            <div>
+                                {stats && Object.entries(stats).map(([key, stat]: [ActivityKeys, BaseStats]) => (
+                                    <React.Fragment key={key}>
+                                        <Typography key={`${key}-stats-emoji`}>
+                                            {`${activityTypeMap[key].emoji}:`}
+                                        </Typography>
+                                        {Object.entries(stat).map(([k, stat]) => (
+                                            <Typography key={`${key}-stats-${k}`} className={classes.stats}>
+                                                {`${statMap[k as keyof typeof statMap]}: ${formatInterval(stat, '')}`}
+                                            </Typography>
+                                        ))}
+                                    </React.Fragment>
                                 ))}
-                            </React.Fragment>
-                        ))}
-                    </div>
-                } />
+                            </div>
+                        } />
                 </ListItem>
-                <ListItem key="filters" button onClick={() => handleFilterOpen(!filterOpen)}>
+                <ListItem key="filters" button onClick={(): void => handleFilterOpen(!filterOpen)}>
                     <ListItemText primary="Filter" />
                     {filterOpen ? <ExpandLess /> : <ExpandMore />}
                 </ListItem>
@@ -96,7 +96,7 @@ const _Drawer: React.FC<DrawerProps> = ({ menuOpen, handleMenuOpen }) => {
                     <List disablePadding key="filter-list">
                         {Object.keys(activityTypeMap).map((key: ActivityKeys) => {
                             return (
-                                <ListItem button dense onClick={() => handleFilter(key)} key={`filter-${key}`}>
+                                <ListItem button dense onClick={(): void => handleFilter(key)} key={`filter-${key}`}>
                                     <ListItemIcon className={classes.itemIcon}>
                                         <Checkbox
                                             edge="start"
@@ -118,7 +118,7 @@ const _Drawer: React.FC<DrawerProps> = ({ menuOpen, handleMenuOpen }) => {
                         disabled={!state.loggedIn}
                         color="secondary"
                         variant="contained"
-                        onClick={() => {
+                        onClick={(): void => {
                             logoutAction(state, dispatch)();
                         }}
                     >

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import axios, { AxiosRequestConfig } from 'axios';
 import { State, ActivityActionTypes, Data, Action, PostResponseData, GetResponseData, PutResponseData, DeleteResponseData } from './types';
-import { getPath } from './utils';
+import { getPath, rawToStats } from './utils';
 
 export const fetchDataAction = (state: State, dispatch: React.Dispatch<Action>) =>
     async (): Promise<void> => {
-        if (!state.hasMore) {
+        if (!state.hasMore || state.requestInFlight) {
             return;
         }
         dispatch({ type: ActivityActionTypes.FETCH_DATA_REQUEST });
@@ -25,6 +25,7 @@ export const fetchDataAction = (state: State, dispatch: React.Dispatch<Action>) 
             const last = state._data.getSmallest().dateTime;
             dispatch({
                 type: ActivityActionTypes.FETCH_DATA_SUCCESS,
+                stats: rawToStats(response.data.stats),
                 last,
                 hasMore,
                 response: {
@@ -84,6 +85,7 @@ export const addNewAction = (activity: Data, state: State, dispatch: React.Dispa
             const last = state._data.getSmallest().dateTime;
             dispatch({
                 type: ActivityActionTypes.FETCH_DATA_SUCCESS,
+                stats: rawToStats(response.data.stats),
                 last,
                 response: {
                     status: response.status,
@@ -127,6 +129,7 @@ export const updateAction = (activity: Data, state: State, dispatch: React.Dispa
             const last = state._data.getSmallest().dateTime;
             dispatch({
                 type: ActivityActionTypes.FETCH_DATA_SUCCESS,
+                stats: rawToStats(response.data.stats),
                 last,
                 response: {
                     status: response.status,
@@ -172,6 +175,7 @@ export const deleteAction = (activity: Data, state: State, dispatch: React.Dispa
             const last = state._data.getSmallest().dateTime;
             dispatch({
                 type: ActivityActionTypes.FETCH_DATA_SUCCESS,
+                stats: rawToStats(response.data.stats),
                 last,
                 response: {
                     status: response.status,

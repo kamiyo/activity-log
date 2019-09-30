@@ -36,7 +36,7 @@ const activityReducer = (state: State, action: Action): State => {
                 ...state,
                 requestInFlight: false,
                 activities: state._data.toGrouped(),
-                // stats: state._data.getStats(),
+                stats: action.stats,
                 last: action.last,
                 response: action.response,
                 error: false,

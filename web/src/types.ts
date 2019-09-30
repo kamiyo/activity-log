@@ -57,11 +57,16 @@ export interface Interval {
     seconds?: number;
 }
 
-export interface Stats {
-    type: ActivityKeys;
+export interface BaseStats {
     average: Interval;
     stddev: Interval;
 }
+
+export interface RawStats extends BaseStats {
+    type: ActivityKeys;
+}
+
+export type Stats = Record<ActivityKeys, BaseStats>;
 
 export interface Data extends BaseData {
     dateTime: DateTime;
@@ -86,6 +91,7 @@ export type Action =
         type: ActivityActionTypes.FETCH_DATA_SUCCESS;
         last: DateTime;
         hasMore?: boolean;
+        stats: Stats;
         response: Response;
     }
     | { type: ActivityActionTypes.FETCH_DATA_REQUEST }
@@ -122,23 +128,23 @@ export type ActivityKeys = 'meal' | 'poop' | 'nurse' | 'bath' | 'sleep';
 
 export interface GetResponseData {
     activities: RawData[];
-    stats: Stats[];
+    stats: RawStats[];
 }
 
 export interface PostResponseData {
     activities: RawData[];
-    stats: Stats[];
+    stats: RawStats[];
     created: RawData;
 }
 
 export interface PutResponseData {
     activities: RawData[];
-    stats: Stats[];
+    stats: RawStats[];
     updated: RawData;
 }
 
 export interface DeleteResponseData {
     activities: RawData[];
-    stats: Stats[];
+    stats: RawStats[];
     deleted: RawData;
 }
