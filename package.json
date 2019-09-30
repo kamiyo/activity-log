@@ -6,7 +6,8 @@
     "watch-server": "cd server && tsc -w",
     "migrate-up": "node ./server/build/migrate up",
     "migrate-down": "node ./server/build/migrate down",
-    "test": "cd web && jest"
+    "test": "cd web && jest",
+    "create-user": "node ./server/build/createUser"
   },
   "dependencies": {
     "@date-io/luxon": "^1.3.11",

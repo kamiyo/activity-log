@@ -86,7 +86,7 @@ loginRouter.post('/login', async (req, res) => {
                 { issuer: 'jasboys.seanchenpiano.com', }
             );
             res.status(200).cookie('_al_jwt', token, {
-                path: path.join('/', publicPath, '/api'),
+                path: path.posix.join('/', publicPath, '/api'),
                 maxAge: Number.MAX_SAFE_INTEGER,
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
@@ -104,7 +104,7 @@ loginRouter.post('/login', async (req, res) => {
 
 loginRouter.post('/logout', async (_, res) => {
     res.status(200).clearCookie('_al_jwt', {
-        path: '/api',
+        path: path.posix.join('/', publicPath, '/api'),
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
     }).json({});

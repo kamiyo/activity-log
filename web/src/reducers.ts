@@ -28,7 +28,7 @@ const activityReducer = (state: State, action: Action): State => {
                 ...state,
                 requestInFlight: false,
                 response: action.response,
-                loggedIn: (action.response.status === 401 || action.response.status === 403) ? false : state.loggedIn,
+                loggedIn: (action.response.status === 401) ? false : state.loggedIn,
                 error: true,
             };
         case ActivityActionTypes.FETCH_DATA_SUCCESS:

@@ -1,13 +1,8 @@
-TODO
+# Activity Log
+## For your baby (or you)
 
-Remove material-table
-Use paginated stickyheader table
-Floating button for adding
-On click row, change button to edit
-Use dialog for edit
+Built with React and Material-UI. Backend with Express and Sequelize
+Use PostgreSQL or else I have no idea what will happen.
 
-Serverside stuff
-Should use psql (can't guarantee functionality of others)
-
-Need node-gyp on server (global install) for hashing and GCC.
-once build, use node ./server/build/createUser.js [username] [password] to create user.
+node-gyp is needed on the server (global install) in order to install and use Argon2 for password hashing.
+once built, use node ./server/build/createUser.js [username] [password] to create user.
