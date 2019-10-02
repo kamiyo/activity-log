@@ -18,7 +18,7 @@ const handleError = (res: Response, err: string) => {
 
 apiRouter.use(verifyLogin);
 
-const generateTimeSinceAndStats = async (t: Transaction): Promise<{ activities: [Activity[], number]; stats: [TimeStats[], number] }> => {
+export const generateTimeSinceAndStats = async (t: Transaction): Promise<{ activities: [Activity[], number]; stats: [TimeStats[], number] }> => {
     const result = await db.sequelize.query(`
         UPDATE activity SET "timeBeforePrev" = diffs.diff
         FROM (
