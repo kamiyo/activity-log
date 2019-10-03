@@ -8,7 +8,6 @@ import { DateTime } from 'luxon';
 import { generateTimeSinceAndStats } from './api';
 import { FindOptions } from 'sequelize/types';
 
-
 const models = db.models;
 
 const webhookRouter = Router();
@@ -38,10 +37,13 @@ const unitMap = {
 
 const handleCreateEvent = async (type: ActivityType, dateTime: string, amount?: string): Promise<string> => {
     const id = uniqid.process();
+    let dt = DateTime.fromISO(dateTime);
+    const { hour, minute } = dt.toObject();
+    const normalizedDateTime = DateTime.local().startOf('day').set({ hour, minute });
     const created = await db.sequelize.transaction(async t => {
         const newAct = await models.Activity.create({
             id,
-            dateTime,
+            dateTime: normalizedDateTime,
             type,
             notes: '',
             amount: amount ? parseFloat(amount) : null,

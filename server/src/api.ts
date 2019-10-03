@@ -161,7 +161,7 @@ apiRouter.post('/activities', async (req, res) => {
         const [created, activities, stats] = await db.sequelize.transaction(async t => {
             const newAct = await models.Activity.create({
                 id,
-                dateTime,
+                dateTime: DateTime.fromISO(dateTime).startOf('minute').toISO(),
                 type,
                 notes,
                 amount: amount ? parseFloat(amount) : null,
@@ -205,7 +205,7 @@ apiRouter.put('/activities/:id', async (req, res) => {
     try {
         const [updated, activities, stats] = await db.sequelize.transaction(async (t) => {
             const [, [modified]] = await models.Activity.update({
-                dateTime,
+                dateTime: DateTime.fromISO(dateTime).startOf('minute').toISO(),
                 type,
                 notes,
                 amount: amount ? parseFloat(amount) : null,
