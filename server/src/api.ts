@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { FindOptions, Op, WhereOperators, Transaction, QueryTypes, QueryOptionsWithType } from 'sequelize';
+import { FindOptions, Op, WhereOperators, Transaction, QueryTypes, QueryOptionsWithType, WhereAttributeHash } from 'sequelize';
 import * as uniqid from 'uniqid';
 
 import db from './models';
@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import { verifyLogin } from './login';
 import { Activity } from './models/activity';
 import { TimeStats } from './models/timeStats';
+import { WhereOptions } from 'sequelize';
 // import { ActivityType, ActivityTypeMap } from './models/activity';
 const models = db.models;
 
@@ -77,7 +78,8 @@ apiRouter.get('/activities', async (req, res) => {
         ],
     };
 
-    const dateTime: WhereOperators = {};
+    let dateTime: WhereOptions = {};
+    let lowerBound, upperBound;
 
     if (type || limit) {
         if (type) {
@@ -90,22 +92,27 @@ apiRouter.get('/activities', async (req, res) => {
         }
     } else {
         if (after && after !== 'all') {
-            dateTime[Op.gt] = DateTime.fromSeconds(parseInt(after)).toJSDate();
-        } else if (!after) {
-            if (before) {
-                dateTime[Op.gt] = DateTime.fromSeconds(parseInt(before)).minus({ days: 3 }).toJSDate();
-            } else {
-                dateTime[Op.gt] = DateTime.local().minus({ days: 3 }).toJSDate();
-            }
+            lowerBound = DateTime.fromSeconds(parseInt(after)).toJSDate();
+            dateTime = {
+                [Op.gt]: lowerBound,
+            };
+            findOptions.where = {
+                dateTime,
+            };
+        } else {
+            findOptions.limit = findOptions.limit || 25;
         }
 
         if (before) {
-            dateTime[Op.lt] = DateTime.fromSeconds(parseInt(before)).toJSDate();
+            upperBound = DateTime.fromSeconds(parseInt(before)).toJSDate();
+            dateTime = {
+                ...dateTime,
+                [Op.lt]: upperBound,
+            };
+            findOptions.where = {
+                dateTime,
+            };
         }
-
-        findOptions.where = {
-            dateTime,
-        };
     }
 
     try {
@@ -114,18 +121,6 @@ apiRouter.get('/activities', async (req, res) => {
                 ...findOptions,
                 transaction: t,
             });
-            if (returned.length === 0) {
-                returned = await models.Activity.findAll({
-                    attributes: {
-                        exclude: ['createdAt', 'updatedAt'],
-                    },
-                    order: [
-                        ['dateTime', 'DESC'],
-                    ],
-                    limit: 20,
-                    transaction: t,
-                });
-            }
             const stats = await models.TimeStats.findAll({
                 transaction: t,
             });

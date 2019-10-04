@@ -12,10 +12,6 @@ const models = db.models;
 
 const webhookRouter = Router();
 
-const handleError = (res: Response, err: string) => {
-    res.status(500).json({ error: err });
-}
-
 webhookRouter.use(verifyLogin);
 
 const handleGetLatest = async (type: ActivityType): Promise<string> => {

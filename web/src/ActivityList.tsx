@@ -23,6 +23,8 @@ import { activityTypeMap } from './GroupedArray';
 import { ActivityListContext } from './App';
 import { getTimeAgo, formatInterval } from './utils';
 
+const SCROLL_THRESHOLD = 100;
+
 interface Column {
     id: 'dateTime' | 'type' | 'amount';
     minWidth?: string;
@@ -147,13 +149,13 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     },
 }));
 
-const onScroll = (threshold: number, fetchData: () => Promise<void>) =>
+const onScroll = (fetchData: () => Promise<void>) =>
     (event: React.SyntheticEvent<HTMLDivElement, Event>): void => {
         const el = (event.target as HTMLDivElement);
         const height = el.getBoundingClientRect().height;
         const scrollTop = el.scrollTop;
         const scrollHeight = el.scrollHeight;
-        if (height + scrollTop >= scrollHeight - threshold) {
+        if (height + scrollTop >= scrollHeight - SCROLL_THRESHOLD) {
             fetchData();
         }
     };
@@ -168,8 +170,9 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
     const theme = useTheme();
     const classes = useStyles(theme);
     const { state, dispatch } = React.useContext(ActivityListContext);
+    const scrollContainerRef = React.useRef<HTMLDivElement>();
 
-    const debouncedScroll = throttle(onScroll(100, fetchDataAction(state, dispatch)), 250);
+    const debouncedScroll = throttle(onScroll(fetchDataAction(state, dispatch)), 250);
 
     React.useEffect(() => {
         if (state.loggedIn) {
@@ -177,12 +180,26 @@ const ActivityList: React.FC<ActivityListProps> = ({ handleSelect, handleIsEdit,
         }
     }, [state.loggedIn]);
 
+    React.useEffect(() => {
+        if (state.loggedIn) {
+            const el = scrollContainerRef.current;
+            const height = el.getBoundingClientRect().height;
+            const scrollTop = el.scrollTop;
+            const scrollHeight = el.scrollHeight;
+            if (height + scrollTop >= scrollHeight - SCROLL_THRESHOLD) {
+                console.log(state.hasMore);
+                fetchDataAction(state, dispatch);
+            }
+        }
+    }, [state.activities])
+
     const MyListSubheader: React.ComponentType<ListSubheaderProps & PaperProps> = ListSubheader;
 
     return (
         <Paper className={classes.root} square>
             <div
                 className={classes.tableWrapper}
+                ref={scrollContainerRef}
                 onScroll={(event): void => {
                     event.persist();
                     debouncedScroll(event);
