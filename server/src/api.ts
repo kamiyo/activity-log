@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { FindOptions, Op, Transaction, QueryTypes, QueryOptionsWithType } from 'sequelize';
+import { FindOptions, Op, Transaction, QueryTypes, QueryOptionsWithType, Sequelize } from 'sequelize';
 import * as uniqid from 'uniqid';
 
 import db from './models';
@@ -270,6 +270,37 @@ apiRouter.delete('/activities/:id', async (req, res) => {
         });
     } catch (err) {
         handleError(res, err);
+    }
+});
+
+apiRouter.get('/daily-amounts', async (req, res) => {
+    try {
+        const dailyAmounts = await db.sequelize.query(`
+            SELECT
+                "type",
+                date_trunc('day', "dateTime") AS date,
+                sum(amount)
+            FROM
+                activity
+            GROUP BY
+                date_trunc('day', "dateTime"),
+                "type"
+            HAVING
+                sum(amount) IS NOT null
+            ORDER BY date DESC;
+        `, {
+            type: QueryTypes.SELECT,
+            raw: true,
+        });
+
+        console.log(dailyAmounts);
+
+        res.json({
+            dailyAmounts,
+        });
+
+    } catch (e) {
+        handleError(res, e);
     }
 });
 
