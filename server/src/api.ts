@@ -274,21 +274,32 @@ apiRouter.delete('/activities/:id', async (req, res) => {
 });
 
 apiRouter.get('/daily-amounts', async (req, res) => {
+    let {
+        zone
+    } = req.query;
+
+    if (!zone) {
+        zone = DateTime.local().offsetNameShort;
+    }
+
     try {
         const dailyAmounts = await db.sequelize.query(`
             SELECT
                 "type",
-                date_trunc('day', "dateTime") AS date,
+                date_trunc('day', "dateTime" AT TIME ZONE :zone) AS date,
                 sum(amount)
             FROM
                 activity
             GROUP BY
-                date_trunc('day', "dateTime"),
+                date_trunc('day', "dateTime" AT TIME ZONE :zone),
                 "type"
             HAVING
                 sum(amount) IS NOT null
             ORDER BY date DESC;
         `, {
+            replacements: {
+                zone,
+            },
             type: QueryTypes.SELECT,
             raw: true,
         });
