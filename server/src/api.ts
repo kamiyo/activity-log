@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { FindOptions, Op, WhereOperators, Transaction, QueryTypes, QueryOptionsWithType, WhereAttributeHash } from 'sequelize';
+import { FindOptions, Op, Transaction, QueryTypes, QueryOptionsWithType } from 'sequelize';
 import * as uniqid from 'uniqid';
 
 import db from './models';
@@ -13,7 +13,7 @@ const models = db.models;
 
 const apiRouter = Router();
 
-const handleError = (res: Response, err: string) => {
+export const handleError = (res: Response, err: string) => {
     res.status(500).json({ error: err });
 }
 
@@ -117,7 +117,7 @@ apiRouter.get('/activities', async (req, res) => {
 
     try {
         const [activities, stats] = await db.sequelize.transaction(async t => {
-            let returned = await models.Activity.findAll({
+            const returned = await models.Activity.findAll({
                 ...findOptions,
                 transaction: t,
             });

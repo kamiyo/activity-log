@@ -1,11 +1,11 @@
-import { Router, Response } from 'express';
+import { Router } from 'express';
 import * as uniqid from 'uniqid';
 
 import db from './models';
 import { verifyLogin } from './login';
 import { ActivityType } from './models/activity';
 import { DateTime } from 'luxon';
-import { generateTimeSinceAndStats } from './api';
+import { generateTimeSinceAndStats, handleError } from './api';
 import { FindOptions } from 'sequelize/types';
 
 const models = db.models;
@@ -13,6 +13,11 @@ const models = db.models;
 const webhookRouter = Router();
 
 webhookRouter.use(verifyLogin);
+
+const unitMap = {
+    meal: 'ounces',
+    sleep: 'hours',
+};
 
 const handleGetLatest = async (type: ActivityType): Promise<string> => {
     const [lastEvent] = await models.Activity.findAll({
@@ -26,14 +31,9 @@ const handleGetLatest = async (type: ActivityType): Promise<string> => {
     return `The last ${type} was ${dt.toRelativeCalendar()} at ${dt.toLocaleString(DateTime.TIME_24_SIMPLE)}${lastEvent.amount ? ` of ${lastEvent.amount} ${unitMap[lastEvent.type as keyof typeof unitMap]}` : ''}.`;
 };
 
-const unitMap = {
-    meal: 'ounces',
-    sleep: 'hours',
-};
-
 const handleCreateEvent = async (type: ActivityType, dateTime: string, amount?: string): Promise<string> => {
     const id = uniqid.process();
-    let dt = DateTime.fromISO(dateTime);
+    const dt = DateTime.fromISO(dateTime);
     const { hour, minute } = dt.toObject();
     const normalizedDateTime = DateTime.local().startOf('day').set({ hour, minute });
     const created = await db.sequelize.transaction(async t => {
@@ -116,6 +116,40 @@ webhookRouter.post('/list', async (req, res) => {
         res.status(400).json({
             error: 'Error!',
         });
+    }
+});
+
+webhookRouter.post('/activities', async (req, res) => {
+    const {
+        dateTime,
+        type,
+        amount,
+        notes,
+    } = req.body;
+
+    if (!type) {
+        handleError(res, 'Type cannot be null');
+        return;
+    }
+
+    const id = uniqid.process();
+
+    try {
+        const created = await db.sequelize.transaction(async t => {
+            const newAct = await models.Activity.create({
+                id,
+                dateTime: DateTime.fromISO(dateTime).startOf('minute').toISO(),
+                type,
+                notes,
+                amount: amount ? parseFloat(amount) : null,
+            }, { transaction: t });
+            await generateTimeSinceAndStats(t);
+            return newAct;
+        });
+
+        res.json({ created });
+    } catch (err) {
+        handleError(res, err);
     }
 });
 
